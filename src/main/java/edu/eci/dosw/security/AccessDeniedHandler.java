@@ -21,7 +21,7 @@ public class AccessDeniedHandler implements org.springframework.security.web.acc
         body.put("timestamp", LocalDateTime.now().toString());
         body.put("status", 403);
         body.put("error", "Forbidden");
-        body.put("message", "No tienes permisos para acceder a este recurso");
+        body.put("message", "Don't have permissions for this resource");
         body.put("path", request.getRequestURI());
         ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(response.getOutputStream(), body);
