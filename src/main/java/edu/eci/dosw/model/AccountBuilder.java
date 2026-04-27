@@ -1,8 +1,5 @@
 package edu.eci.dosw.model;
 
-import edu.eci.dosw.model.Account;
-import edu.eci.dosw.model.Role;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
