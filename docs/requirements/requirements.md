@@ -26,7 +26,7 @@ Requerimientos:
 | **Flujo Principal**          | 1. El usuario accede al formulario de registro.<br>2. El usuario ingresa nombre completo, correo electrónico y contraseña.<br>3. El sistema valida el formato de los datos ingresados.<br>4. El sistema verifica que el correo no esté registrado previamente.<br>5. El sistema almacena la información en la base de datos.<br>6. El sistema confirma el registro exitoso. |
 | **Flujo Alterno 1**          | 1. El usuario ingresa un correo ya registrado.<br>2. El sistema detecta duplicidad.<br>3. El sistema muestra mensaje de error.<br>4. El usuario debe ingresar otro correo.                                                                                                                                                                                                  |
 | **Flujo Alterno 2**          | 1. El usuario ingresa datos inválidos (correo o contraseña).<br>2. El sistema muestra errores de validación.<br>3. El usuario corrige los datos.                                                                                                                                                                                                                            |
-| **Diagrama de caso de uso**  |                                                                                                                                                                           |
+| **Diagrama de caso de uso**  |    ![E1H1](../../docs/images/E1H1.png)                                                                                                                 |
 | **Poscondiciones**           | El usuario queda registrado en el sistema.                                                                                                                                                                                                                                                                                                                                  |
 
 
@@ -39,7 +39,7 @@ Requerimientos:
 | **Actor**                    | Usuario                                                                                                                                                                                                               |
 | **Flujo Principal**          | 1. El usuario ingresa su correo electrónico.<br>2. El sistema identifica el dominio del correo.<br>3. El sistema clasifica el correo como institucional o personal.<br>4. El sistema continúa el proceso de registro. |
 | **Flujo Alterno 1**          | 1. El correo no cumple formato válido.<br>2. El sistema muestra error.<br>3. El usuario debe corregirlo.                                                                                                              |
-| **Diagrama de caso de uso**  |                                                                                                                                                                           |
+| **Diagrama de caso de uso**  |        ![E1H2](../../docs/images/E1H2.png)                                                                                                                                                                   |
 | **Poscondiciones**           | El tipo de correo queda registrado junto con el usuario.                                                                                                                                                              |
 
 | **Campo**                    | **Descripción**                                                                                                                                                           |
@@ -51,7 +51,7 @@ Requerimientos:
 | **Actor**                    | Usuario                                                                                                                                                                   |
 | **Flujo Principal**          | 1. El usuario selecciona su tipo de vínculo institucional.<br>2. El sistema guarda esta información.<br>3. El sistema adapta el formulario según el vínculo seleccionado. |
 | **Flujo Alterno 1**          | 1. El usuario no selecciona ningún vínculo.<br>2. El sistema solicita seleccionar una opción obligatoria.                                                                 |
-| **Diagrama de caso de uso**  |                                                                                                                                                                           |
+| **Diagrama de caso de uso**  | ![E1H3](../../docs/images/E1H3.png)                                                                                                                                     |
 | **Poscondiciones**           | El vínculo institucional queda registrado.                                                                                                                                |
 
 
@@ -64,7 +64,7 @@ Requerimientos:
 | **Actor**                    | Usuario (Estudiante)                                                                                                                                                                                                      |
 | **Flujo Principal**          | 1. El usuario selecciona "estudiante".<br>2. El sistema solicita programa académico y semestre.<br>3. El usuario ingresa los datos.<br>4. El sistema valida la información.<br>5. El sistema guarda los datos académicos. |
 | **Flujo Alterno 1**          | 1. El usuario deja campos vacíos.<br>2. El sistema muestra error.<br>3. El usuario completa los datos.                                                                                                                    |
-| **Diagrama de caso de uso**  |                                                                                                                                                                           |
+| **Diagrama de caso de uso**  | ![E1H4](../../docs/images/E1H4.png)                                                                                                                                                                      |
 | **Poscondiciones**           | La información académica queda registrada.                                                                                                                                                                                |
 
 | **Campo**                    | **Descripción**                                                                                                                                                                         |
@@ -76,7 +76,7 @@ Requerimientos:
 | **Actor**                    | Sistema                                                                                                                                                                                 |
 | **Flujo Principal**          | 1. El usuario finaliza el registro.<br>2. El sistema identifica el tipo de usuario.<br>3. El sistema asigna el rol correspondiente.<br>4. El sistema guarda el rol en la base de datos. |
 | **Flujo Alterno 1**          | 1. No existe rol configurado.<br>2. El sistema lanza error interno.<br>3. Se registra el incidente.                                                                                     |
-| **Diagrama de caso de uso**  |                                                                                                                                                                           |
+| **Diagrama de caso de uso**  |      ![E1H5](../../docs/images/E1H5.png)                                                                                                                                             |
 | **Poscondiciones**           | El usuario queda registrado con un rol asignado.                                                                                                                                        |
 
 
