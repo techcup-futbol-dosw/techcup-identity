@@ -116,10 +116,8 @@ public class AuthService {
                 .map(roleService::getPermissions)
                 .filter(permissionList -> permissionList != null)
                 .flatMap(List::stream)
-                .map(Permission::getName) // o getAction(), según como definan Permission
+                .map(Permission::getName)
                 .distinct()
                 .toList();
     }
-
-
 }
