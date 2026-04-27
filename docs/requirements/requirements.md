@@ -14,6 +14,69 @@ A continuación se muestran las épicas y sus requerimientos asociados
 | **Descripción** | Permitir a los usuarios registrarse en el sistema mediante diferentes tipos de correo electrónico. El proceso de registro debe solicitar la información básica del usuario, incluyendo nombre completo, correo electrónico y contraseña, así como datos relacionados con su vínculo institucional. En el caso de usuarios con rol de estudiante, se deberá incluir información académica adicional como programa y semestre. Al completar el registro, el sistema asignará automáticamente un rol predeterminado a cada usuario. |
 | **Stakeholder** | Administrador y sistema |
 
+Requerimientos:
+
+| **Campo**                    | **Descripción**                                                                                                                                                           |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                       | RF-REG-03                                                                                                                                                                 |
+| **Nombre del requerimiento** | Registrar vínculo institucional                                                                                                                                           |
+| **Descripción**              | El sistema debe permitir al usuario indicar su relación con la institución (ej. estudiante, docente, administrativo) para determinar los datos adicionales requeridos.    |
+| **Precondiciones**           | 1. El sistema debe tener definidos los tipos de vínculo.<br>2. El usuario debe estar en proceso de registro.                                                              |
+| **Actor**                    | Usuario                                                                                                                                                                   |
+| **Flujo Principal**          | 1. El usuario selecciona su tipo de vínculo institucional.<br>2. El sistema guarda esta información.<br>3. El sistema adapta el formulario según el vínculo seleccionado. |
+| **Flujo Alterno 1**          | 1. El usuario no selecciona ningún vínculo.<br>2. El sistema solicita seleccionar una opción obligatoria.                                                                 |
+| **Diagrama de caso de uso**  |                                                                                                                                                                           |
+| **Poscondiciones**           | El vínculo institucional queda registrado.                                                                                                                                |
+
+| **Campo**                    | **Descripción**                                                                                                                                                                                                       |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                       | RF-REG-02                                                                                                                                                                                                             |
+| **Nombre del requerimiento** | Registro con tipo de correo electrónico                                                                                                                                                                               |
+| **Descripción**              | El sistema debe permitir registrar usuarios utilizando diferentes tipos de correo electrónico (institucional o personal), identificando su tipo para procesos posteriores.                                            |
+| **Precondiciones**           | 1. El sistema debe permitir ingreso de correos válidos.<br>2. Debe existir lógica para identificar tipo de correo.                                                                                                    |
+| **Actor**                    | Usuario                                                                                                                                                                                                               |
+| **Flujo Principal**          | 1. El usuario ingresa su correo electrónico.<br>2. El sistema identifica el dominio del correo.<br>3. El sistema clasifica el correo como institucional o personal.<br>4. El sistema continúa el proceso de registro. |
+| **Flujo Alterno 1**          | 1. El correo no cumple formato válido.<br>2. El sistema muestra error.<br>3. El usuario debe corregirlo.                                                                                                              |
+| **Diagrama de caso de uso**  |                                                                                                                                                                           |
+| **Poscondiciones**           | El tipo de correo queda registrado junto con el usuario.                                                                                                                                                              |
+
+| **Campo**                    | **Descripción**                                                                                                                                                           |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                       | RF-REG-03                                                                                                                                                                 |
+| **Nombre del requerimiento** | Registrar vínculo institucional                                                                                                                                           |
+| **Descripción**              | El sistema debe permitir al usuario indicar su relación con la institución (ej. estudiante, docente, administrativo) para determinar los datos adicionales requeridos.    |
+| **Precondiciones**           | 1. El sistema debe tener definidos los tipos de vínculo.<br>2. El usuario debe estar en proceso de registro.                                                              |
+| **Actor**                    | Usuario                                                                                                                                                                   |
+| **Flujo Principal**          | 1. El usuario selecciona su tipo de vínculo institucional.<br>2. El sistema guarda esta información.<br>3. El sistema adapta el formulario según el vínculo seleccionado. |
+| **Flujo Alterno 1**          | 1. El usuario no selecciona ningún vínculo.<br>2. El sistema solicita seleccionar una opción obligatoria.                                                                 |
+| **Diagrama de caso de uso**  |                                                                                                                                                                           |
+| **Poscondiciones**           | El vínculo institucional queda registrado.                                                                                                                                |
+
+
+| **Campo**                    | **Descripción**                                                                                                                                                                                                           |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                       | RF-REG-04                                                                                                                                                                                                                 |
+| **Nombre del requerimiento** | Registro de información académica (estudiante)                                                                                                                                                                            |
+| **Descripción**              | El sistema debe solicitar información académica adicional (programa y semestre) cuando el usuario tenga rol de estudiante.                                                                                                |
+| **Precondiciones**           | 1. El usuario debe haber seleccionado "estudiante" como vínculo institucional.<br>2. El sistema debe tener configurados programas académicos.                                                                             |
+| **Actor**                    | Usuario (Estudiante)                                                                                                                                                                                                      |
+| **Flujo Principal**          | 1. El usuario selecciona "estudiante".<br>2. El sistema solicita programa académico y semestre.<br>3. El usuario ingresa los datos.<br>4. El sistema valida la información.<br>5. El sistema guarda los datos académicos. |
+| **Flujo Alterno 1**          | 1. El usuario deja campos vacíos.<br>2. El sistema muestra error.<br>3. El usuario completa los datos.                                                                                                                    |
+| **Diagrama de caso de uso**  |                                                                                                                                                                           |
+| **Poscondiciones**           | La información académica queda registrada.                                                                                                                                                                                |
+
+| **Campo**                    | **Descripción**                                                                                                                                                                         |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                       | RF-REG-05                                                                                                                                                                               |
+| **Nombre del requerimiento** | Asignación automática de rol                                                                                                                                                            |
+| **Descripción**              | El sistema debe asignar automáticamente un rol predeterminado al usuario al completar su registro.                                                                                      |
+| **Precondiciones**           | 1. Debe existir al menos un rol predeterminado configurado.<br>2. El registro debe haberse completado correctamente.                                                                    |
+| **Actor**                    | Sistema                                                                                                                                                                                 |
+| **Flujo Principal**          | 1. El usuario finaliza el registro.<br>2. El sistema identifica el tipo de usuario.<br>3. El sistema asigna el rol correspondiente.<br>4. El sistema guarda el rol en la base de datos. |
+| **Flujo Alterno 1**          | 1. No existe rol configurado.<br>2. El sistema lanza error interno.<br>3. Se registra el incidente.                                                                                     |
+| **Diagrama de caso de uso**  |                                                                                                                                                                           |
+| **Poscondiciones**           | El usuario queda registrado con un rol asignado.                                                                                                                                        |
+
 
 
 **Inactivar usuario**
