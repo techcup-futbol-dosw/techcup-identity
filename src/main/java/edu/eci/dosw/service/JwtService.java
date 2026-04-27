@@ -129,6 +129,12 @@ public class JwtService {
                 .signWith(secretKey)
                 .compact();
     }
+    public Long getAccessTokenExpiration(){
+        return accessTokenExpiration;
+    }
+    public Long getRefreshTokenExpiration(){
+        return refreshTokenExpiration;
+    }
 
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
