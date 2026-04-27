@@ -6,46 +6,182 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class AuthService {
-    private final JwtService jwtService;
-    private final UserRepository userRepository;
-    private final RoleService roleService;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final PasswordEncoder passwordEncoder;
+
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
-    public AuthService(JwtService jwtService, UserRepository userRepository, RoleService roleService, PasswordEncoder passwordEncoder, RefreshTokenRepository refreshTokenRepository){
+    private final JwtService jwtService;
+    private final AccountRepository accountRepository;
+    private final AccountMapper accountMapper;
+    private final RoleService roleService;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenMapper refreshTokenMapper;
+    private final PasswordEncoder passwordEncoder;
+
+    public AuthService(JwtService jwtService,
+                       AccountRepository accountRepository,
+                       AccountMapper accountMapper,
+                       RoleService roleService,
+                       RefreshTokenRepository refreshTokenRepository,
+                       RefreshTokenMapper refreshTokenMapper,
+                       PasswordEncoder passwordEncoder) {
         this.jwtService = jwtService;
-        this.userRepository = userRepository;
+        this.accountRepository = accountRepository;
+        this.accountMapper = accountMapper;
         this.roleService = roleService;
-        this.passwordEncoder = passwordEncoder;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.refreshTokenMapper = refreshTokenMapper;
+        this.passwordEncoder = passwordEncoder;
     }
+
     @Transactional
-    public AuthResponse login(AuthRequest request){
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> {
-                    log.warn("Login failed: user not found for email={}", request.getEmail());
-                    return new RuntimeException("Invalid credentials");
-                });
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())){
-            log.warn("Login failed: invalid password for userId={}", user.getId());
+    public AuthResponse login(AuthRequest request) {
+        Account account = findAccountByEmailOrThrow(request.getEmail());
+
+        if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
+            log.warn("Login failed: invalid password for accountId={}", account.getId());
             throw new RuntimeException("Invalid credentials");
         }
-        if (!"ACTIVE".equalsIgnoreCase(user.getStatus())){
-            log.warn("Login failed: inactive user userId={}", user.getId());
-            throw new RuntimeException("User not active");
+
+        validateActiveAccount(account, "Login");
+
+        String refreshToken = jwtService.generateRefreshToken(account.getId());
+        saveRefreshToken(account, refreshToken);
+
+        log.info("Login successful for accountId={}", account.getId());
+        return buildAuthResponse(account, refreshToken);
+    }
+
+    @Transactional
+    public AuthResponse refreshToken(RefreshTokenRequest request) {
+        String refreshTokenValue = request.getRefreshToken();
+
+        if (!jwtService.isRefreshTokenValid(refreshTokenValue)) {
+            log.warn("Refresh failed: invalid or expired refresh token");
+            throw new RuntimeException("Invalid or expired refresh token");
         }
-        List<String> roleNames = extractRoleNames(user.getId());
-        List<String> permissionNames = extractPermissionNames(user.getId());
-        String accessToken = jwtService.generateAccessToken(user.getId(), roleNames, permissionNames);
-        String refreshToken = jwtService.generateRefreshToken(user.getId());
-        saveRefreshToken(user, refreshToken);
-        log.info("Login successful for userId={}", user.getId());
+
+        RefreshToken storedToken = findStoredRefreshTokenOrThrow(refreshTokenValue, "Refresh");
+
+        if (storedToken.isRevoked()) {
+            log.warn("Refresh failed: refresh token revoked");
+            throw new RuntimeException("Refresh token revoked");
+        }
+
+        Long accountId = Long.valueOf(jwtService.extractAccountId(refreshTokenValue));
+        Account account = findAccountByIdOrThrow(accountId);
+
+        validateActiveAccount(account, "Refresh");
+
+        revokeRefreshToken(storedToken);
+
+        String newRefreshToken = jwtService.generateRefreshToken(accountId);
+        saveRefreshToken(account, newRefreshToken);
+
+        log.info("Token refresh successful for accountId={}", account.getId());
+        return buildAuthResponse(account, newRefreshToken);
+    }
+
+    @Transactional
+    public void logout(LogoutRequest request) {
+        String refreshTokenValue = request.getRefreshToken();
+        RefreshToken storedToken = findStoredRefreshTokenOrThrow(refreshTokenValue, "Logout");
+
+        if (!storedToken.isRevoked()) {
+            revokeRefreshToken(storedToken);
+            log.info("Logout successful for accountId={}", storedToken.getAccount().getId());
+        }
+    }
+
+    @Transactional
+    public TokenValidationResponse validateToken(TokenValidationRequest request) {
+        String token = request.getToken();
+
+        if (!jwtService.isTokenValid(token)) {
+            log.warn("Token validation failed");
+            return invalidValidationResponse();
+        }
+
+        String accountId = jwtService.extractAccountId(token);
+        List<String> roles = jwtService.extractRoles(token);
+        List<String> permissions = jwtService.extractPermissions(token);
+        String tokenType = jwtService.extractTokenType(token);
+
+        Optional<AccountEntity> optionalAccountEntity = accountRepository.findById(Long.valueOf(accountId));
+        if (optionalAccountEntity.isEmpty()) {
+            log.warn("Token validation failed: account not found accountId={}", accountId);
+            return invalidValidationResponse();
+        }
+
+        Account account = accountMapper.toModel(optionalAccountEntity.get());
+        if (!"ACTIVE".equalsIgnoreCase(account.getStatus())) {
+            log.warn("Token validation failed: inactive account accountId={}", accountId);
+            return invalidValidationResponse();
+        }
+
+        return new TokenValidationResponse(true, accountId, roles, permissions, tokenType);
+    }
+
+    private Account findAccountByEmailOrThrow(String email) {
+        AccountEntity accountEntity = accountRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.warn("Login failed: account not found for email={}", email);
+                    return new RuntimeException("Invalid credentials");
+                });
+
+        return accountMapper.toModel(accountEntity);
+    }
+
+    private Account findAccountByIdOrThrow(Long accountId) {
+        AccountEntity accountEntity = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        return accountMapper.toModel(accountEntity);
+    }
+
+    private RefreshToken findStoredRefreshTokenOrThrow(String tokenValue, String action) {
+        RefreshTokenEntity storedTokenEntity = refreshTokenRepository.findByToken(tokenValue)
+                .orElseThrow(() -> {
+                    log.warn("{} failed: refresh token not found", action);
+                    return new RuntimeException("Refresh token not found");
+                });
+
+        return refreshTokenMapper.toModel(storedTokenEntity);
+    }
+
+    private void validateActiveAccount(Account account, String action) {
+        if (!"ACTIVE".equalsIgnoreCase(account.getStatus())) {
+            log.warn("{} failed: inactive account accountId={}", action, account.getId());
+            throw new RuntimeException("Account not active");
+        }
+    }
+
+    private void revokeRefreshToken(RefreshToken refreshToken) {
+        refreshToken.setRevoked(true);
+        refreshTokenRepository.save(refreshTokenMapper.toEntity(refreshToken));
+    }
+
+    private void saveRefreshToken(Account account, String tokenValue) {
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setToken(tokenValue);
+        refreshToken.setAccount(account);
+        refreshToken.setRevoked(false);
+
+        refreshTokenRepository.save(refreshTokenMapper.toEntity(refreshToken));
+    }
+
+    private AuthResponse buildAuthResponse(Account account, String refreshToken) {
+        List<String> roleNames = extractRoleNames(account.getId());
+        List<String> permissionNames = extractPermissionNames(account.getId());
+        String accessToken = jwtService.generateAccessToken(account.getId(), roleNames, permissionNames);
+
         return new AuthResponse(
                 accessToken,
                 refreshToken,
@@ -53,111 +189,42 @@ public class AuthService {
                 jwtService.getAccessTokenExpiration() / 1000
         );
     }
-    @Transactional
-    public AuthResponse refreshToken(RefreshTokenRequest request){
-        String refreshToken = request.getRefreshToken();
-        if (!jwtService.isRefreshTokenValid(refreshToken)) {
-            log.warn("Refresh failed: invalid or expired refresh token");
-            throw new RuntimeException("Invalid or expired refresh token");
-        }
-        RefreshToken storedToken = refreshTokenRepository.findByToken(refreshToken)
-                .orElseThrow(() -> {
-                    log.warn("Refresh failed: refresh token not found");
-                    return new RuntimeException("Refresh token not found");
-                });
-        if (storedToken.isRevoked()){
-            log.warn("Refresh failed: refresh token revoked");
-            throw new RuntimeException("Refresh token revoked");
-        }
-        Long userId = Long.valueOf(jwtService.extractUserId(refreshToken));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        if (!"ACTIVE".equalsIgnoreCase(user.getStatus())){
-            log.warn("Refresh failed: inactive user userId={}", user.getId());
-            throw new RuntimeException("User not active");
-        }
-        List<String> roleNames = extractRoleNames(user.getId());
-        List<String> permissionNames = extractPermissionNames(user.getId());
-        String newAccessToken = jwtService.generateAccessToken(user.getId(), roleNames, permissionNames);
-        storedToken.setRevoked(true);
-        refreshTokenRepository.save(storedToken);
-        String newRefreshToken = jwtService.generateRefreshToken(userId);
-        saveRefreshToken(user, newRefreshToken);
-        log.info("Token refresh successful for userId={}", user.getId());
-        return new AuthResponse(
-                newAccessToken,
-                newRefreshToken,
-                "Bearer",
-                jwtService.getAccessTokenExpiration() / 1000
+
+    private TokenValidationResponse invalidValidationResponse() {
+        return new TokenValidationResponse(
+                false,
+                null,
+                Collections.emptyList(),
+                Collections.emptyList(),
+                null
         );
     }
 
-    @Transactional
-    public void logout(LogoutRequest request) {
-        String refreshTokenValue = request.getRefreshToken();
-        RefreshToken storedToken = refreshTokenRepository.findByToken(refreshTokenValue)
-                .orElseThrow(() -> {
-                    log.warn("Logout failed: refresh token not found");
-                    return new RuntimeException("Refresh token not found");
-                });
-        if (!storedToken.isRevoked()) {
-            storedToken.setRevoked(true);
-            refreshTokenRepository.save(storedToken);
-            log.info("Logout successful for userId={}", storedToken.getUser().getId());
-        }
-    }
-    @Transactional
-    public TokenValidationResponse validateToken(TokenValidationRequest request){
-        String token = request.getToken();
-        boolean valid = jwtService.isTokenValid(token);
-        if (!valid){
-            log.warn("Token validation failed");
-            return new TokenValidationResponse(
-                    false,
-                    null,
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    null
-            );
-        }
-        String userId = jwtService.extractUserId(token);
-        List<String> roles = jwtService.extractRoles(token);
-        List<String> permissions = jwtService.extractPermissions(token);
-        String tokenType = jwtService.extractTokenType(token);
-        Optional<User> optionalUser = userRepository.findById(Long.valueOf(userId));
-        if (optionalUser.isEmpty() || !"ACTIVE".equalsIgnoreCase(optionalUser.get().getStatus())) {
-            log.warn("Token validation failed: user not found or inactive userId={}", userId);
-            return new TokenValidationResponse(
-                    false,
-                    null,
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    null
-            );
-        }
-        return new TokenValidationResponse(true, userId, roles, permissions, tokenType);
-    }
-    private List<String> extractRoleNames(Long userId) {
-        List<Role> roles = roleService.getRoleByUser(userId);
+    private List<String> extractRoleNames(Long accountId) {
+        List<Role> roles = roleService.getRoleByAccount(accountId);
+
         if (roles == null) {
             return Collections.emptyList();
         }
+
         return roles.stream()
                 .map(Role::getName)
                 .distinct()
                 .toList();
     }
 
-    private List<String> extractPermissionNames(Long userId) {
-        List<Role> roles = roleService.getRoleByUser(userId);
+    private List<String> extractPermissionNames(Long accountId) {
+        List<Role> roles = roleService.getRoleByAccount(accountId);
+
         if (roles == null || roles.isEmpty()) {
             return Collections.emptyList();
         }
+
         return roles.stream()
                 .map(Role::getId)
                 .map(roleService::getPermissions)
-                .filter(permissionList -> permissionList != null)
-                .flatMap(List::stream)
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
                 .map(Permission::getName)
                 .distinct()
                 .toList();
