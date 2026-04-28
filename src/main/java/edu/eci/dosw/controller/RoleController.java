@@ -5,6 +5,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import edu.eci.dosw.dto.*;
+import edu.eci.dosw.service.*;
+
 @RestController
 @RequestMapping("/roles")
 public class RoleController {

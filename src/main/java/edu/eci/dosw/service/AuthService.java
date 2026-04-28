@@ -12,6 +12,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import edu.eci.dosw.dto.*;
+import edu.eci.dosw.mapper.*;
+import edu.eci.dosw.repository.*;
+import edu.eci.dosw.model.*;
+import edu.eci.dosw.entity.*;
+
 @Service
 public class AuthService {
 
