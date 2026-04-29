@@ -1,12 +1,16 @@
 package edu.eci.dosw.controller;
 
 import jakarta.validation.Valid;
+
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import edu.eci.dosw.dto.*;
 import edu.eci.dosw.service.*;
+import edu.eci.dosw.model.*;
 
 @RestController
 @RequestMapping("/roles")

@@ -1,13 +1,9 @@
 package edu.eci.dosw.service;
 
-import edu.eci.dosw.entity.AccountEntity;
-import edu.eci.dosw.entity.RoleEntity;
-import edu.eci.dosw.mapper.AccountMapper;
-import edu.eci.dosw.model.Account;
-import edu.eci.dosw.model.AccountBuilder;
-import edu.eci.dosw.model.Role;
-import edu.eci.dosw.repository.AccountRepository;
-import edu.eci.dosw.repository.RoleRepository;
+import edu.eci.dosw.entity.*;
+import edu.eci.dosw.mapper.*;
+import edu.eci.dosw.model.*;
+import edu.eci.dosw.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,10 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
 
-import edu.eci.dosw.mapper.*;
 import edu.eci.dosw.dto.*;
 
 @Service

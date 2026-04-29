@@ -1,9 +1,7 @@
 package edu.eci.dosw.mapper;
 
-import edu.eci.dosw.entity.AccountEntity;
-import edu.eci.dosw.entity.RoleEntity;
-import edu.eci.dosw.model.Account;
-import edu.eci.dosw.model.Role;
+import edu.eci.dosw.entity.*;
+import edu.eci.dosw.model.*;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
