@@ -30,6 +30,15 @@ public class Account {
         this.roles = roles != null ? new ArrayList<>(roles) : new ArrayList<>();
     }
 
+    public Account(String email, String password, LocalDateTime updatedAt, LocalDateTime createdAt, LocalDateTime lastLoginAt, List<Role> roles) {
+        this.email = email;
+        this.password = password;
+        this.updatedAt = updatedAt;
+        this.createdAt = createdAt;
+        this.lastLoginAt = lastLoginAt;
+        this.roles = roles;
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
