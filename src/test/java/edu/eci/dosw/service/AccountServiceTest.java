@@ -2,7 +2,7 @@ package edu.eci.dosw.service;
 
 import edu.eci.dosw.dto.AccountResponse;
 import edu.eci.dosw.dto.RegisterAccountRequest;
-import edu.eci.dosw.dto.RegisterAccountRequest.Relation;
+import edu.eci.dosw.dto.Relation;
 import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.entity.RoleEntity;
 import edu.eci.dosw.mapper.AccountMapper;

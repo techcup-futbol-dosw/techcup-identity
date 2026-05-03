@@ -2,7 +2,7 @@ package edu.eci.dosw.service;
 
 import edu.eci.dosw.dto.*;
 import edu.eci.dosw.entity.*;
-import edu.eci.dosw.entity.AccountEntity.AccountStatus;
+import edu.eci.dosw.entity.AccountStatus;
 import edu.eci.dosw.mapper.*;
 import edu.eci.dosw.model.*;
 import edu.eci.dosw.repository.*;
