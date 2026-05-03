@@ -1,5 +1,6 @@
 package edu.eci.dosw.mapper;
 
+import edu.eci.dosw.dto.AccountResponse;
 import edu.eci.dosw.entity.*;
 import edu.eci.dosw.model.*;
 import org.springframework.stereotype.Component;
@@ -16,7 +17,6 @@ public class AccountMapper {
         this.roleMapper = roleMapper;
     }
 
-    /** AccountEntity → Account (modelo de dominio) */
     public Account toModel(AccountEntity entity) {
         if (entity == null) return null;
 
@@ -39,7 +39,6 @@ public class AccountMapper {
         );
     }
 
-    /** Account (modelo de dominio) → AccountEntity */
     public AccountEntity toEntity(Account model) {
         if (model == null) return null;
 
@@ -61,5 +60,24 @@ public class AccountMapper {
         entity.setRoles(roleEntities);
 
         return entity;
+    }
+
+    public AccountResponse toResponse(Account model) {
+        if (model == null) return null;
+
+        List<String> roleNames = new ArrayList<>();
+        if (model.getRoles() != null) {
+            for (Role role : model.getRoles()) {
+                roleNames.add(role.getName());
+            }
+        }
+
+        return new AccountResponse(
+                model.getId(),
+                model.getEmail(),
+                model.getStatus(),
+                model.getCreatedAt(),
+                roleNames
+        );
     }
 }
