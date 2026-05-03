@@ -6,11 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import edu.eci.dosw.dto.*;
 import edu.eci.dosw.mapper.*;
@@ -80,8 +76,8 @@ public class AuthService {
             log.warn("Refresh failed: refresh token revoked");
             throw new RuntimeException("Refresh token revoked");
         }
-
-        Long accountId = Long.valueOf(jwtService.extractAccountId(refreshTokenValue));
+        Long accountId = null;
+        //Long accountId = Long.valueOf(jwtService.extractAccountId(refreshTokenValue));
         Account account = findAccountByIdOrThrow(accountId);
 
         validateActiveAccount(account, "Refresh");
@@ -114,8 +110,8 @@ public class AuthService {
             log.warn("Token validation failed");
             return invalidValidationResponse();
         }
-
-        String accountId = jwtService.extractAccountId(token);
+        String accountId = null;
+        //String accountId = jwtService.extractAccountId(token);
         List<String> roles = jwtService.extractRoles(token);
         List<String> permissions = jwtService.extractPermissions(token);
         String tokenType = jwtService.extractTokenType(token);
@@ -207,8 +203,8 @@ public class AuthService {
     }
 
     private List<String> extractRoleNames(Long accountId) {
-        List<Role> roles = roleService.getRoleByAccount(accountId);
-
+        //List<Role> roles = roleService.getRoleByAccount(accountId);
+        List<Role>roles = new ArrayList<>();
         if (roles == null) {
             return Collections.emptyList();
         }
@@ -220,8 +216,8 @@ public class AuthService {
     }
 
     private List<String> extractPermissionNames(Long accountId) {
-        List<Role> roles = roleService.getRoleByAccount(accountId);
-
+        //List<Role> roles = roleService.getRoleByAccount(accountId);
+        List<Role>roles = new ArrayList<>();
         if (roles == null || roles.isEmpty()) {
             return Collections.emptyList();
         }

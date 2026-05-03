@@ -102,7 +102,7 @@ public class AccountBuilder {
         if (updatedAt == null || updatedAt.isBefore(createdAt)){
             updatedAt = createdAt;
         }
-        if (lastLoginAt != null || lastLoginAt.isBefore(createdAt)){
+        if (lastLoginAt != null && lastLoginAt.isBefore(createdAt)){
             lastLoginAt = null;
         }
     }
