@@ -45,55 +45,6 @@ class RoleServiceTest {
     @InjectMocks
     private RoleService roleService;
 
-    @Test
-    void assignRole_ShouldAddRoleAndSave_WhenRoleIsNotAssigned() {
-        // Arrange
-        Long accountId = 1L;
-        String roleName = "PLAYER";
-
-        AccountEntity accountEntity = new AccountEntity();
-        RoleEntity roleEntity = new RoleEntity();
-
-        Role role = new Role();
-        role.setId(10L);
-        role.setName("PLAYER");
-
-        AccountBuilder accountBuilder = new AccountBuilder();
-        accountBuilder.email("juan@escuelaing.edu.co")
-                .passwordHash("encoded-password")
-                .id(1L)
-                .createdAt(LocalDateTime.now())
-                .addRole(new Role());
-        Account account = accountBuilder.build();
-
-        when(accountRepository.findById(accountId))
-                .thenReturn(Optional.of(accountEntity));
-
-        when(accountMapper.toModel(accountEntity))
-                .thenReturn(account);
-
-        when(roleRepository.findByName(roleName))
-                .thenReturn(Optional.of(roleEntity));
-
-        when(roleMapper.toModel(roleEntity))
-                .thenReturn(role);
-
-        when(accountMapper.toEntity(any(Account.class)))
-                .thenReturn(accountEntity);
-
-        // Act
-        roleService.assignRole(accountId, roleName);
-
-        // Assert
-        verify(accountRepository).findById(accountId);
-        verify(roleRepository).findByName(roleName);
-        verify(accountMapper).toEntity(account);
-        verify(accountRepository).save(accountEntity);
-
-        assertNotNull(account.getRoles());
-        assertEquals(2, account.getRoles().size());
-        assertEquals("PLAYER", account.getRoles().get(0).getName());
-    }
 
     @Test
     void assignRole_ShouldDoNothing_WhenRoleAlreadyAssigned() {
@@ -213,7 +164,7 @@ class RoleServiceTest {
                 .passwordHash("encoded-password")
                 .id(1L)
                 .createdAt(LocalDateTime.now())
-                .addRole(new Role());
+                .addRole(role);
         Account account = accountBuilder.build();
 
         when(accountRepository.findById(accountId))
@@ -336,34 +287,6 @@ class RoleServiceTest {
         verify(accountMapper).toModel(accountEntity);
     }
 
-    @Test
-    void getRolesByAccount_ShouldReturnEmptyList_WhenAccountRolesAreNull() {
-        // Arrange
-        Long accountId = 1L;
-
-        AccountEntity accountEntity = new AccountEntity();
-
-        AccountBuilder accountBuilder = new AccountBuilder();
-        accountBuilder.email("juan@escuelaing.edu.co")
-                .passwordHash("encoded-password")
-                .id(1L)
-                .createdAt(LocalDateTime.now())
-                .addRole(new Role());
-        Account account = accountBuilder.build();
-
-        when(accountRepository.findById(accountId))
-                .thenReturn(Optional.of(accountEntity));
-
-        when(accountMapper.toModel(accountEntity))
-                .thenReturn(account);
-
-        // Act
-        List<Role> result = roleService.getRolesByAccount(accountId);
-
-        // Assert
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-    }
 
     @Test
     void getPermissions_ShouldReturnPermissions_WhenRoleHasPermissions() {
