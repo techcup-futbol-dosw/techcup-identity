@@ -245,9 +245,9 @@ class AuthServiceTest {
         verify(jwtService).isRefreshTokenValid("refresh-token");
         verify(refreshTokenRepository).findByToken("refresh-token");
     }
-
-        @Test
-        void logout_ShouldRevokeToken_WhenTokenExistsAndIsActive() {
+    
+    @Test
+    void logout_ShouldRevokeToken_WhenTokenExistsAndIsActive() {
         LogoutRequest request = new LogoutRequest();
         request.setRefreshToken("refresh-token");
 
@@ -264,7 +264,7 @@ class AuthServiceTest {
 
         verify(refreshTokenRepository).findByToken("refresh-token");
         verify(refreshTokenRepository).save(refreshTokenEntity);
-        }
+    }
 
     @Test
     void logout_ShouldDoNothing_WhenTokenAlreadyRevoked() {
