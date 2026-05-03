@@ -4,11 +4,10 @@ import org.springframework.stereotype.Service;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+
 import javax.crypto.SecretKey;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,7 +57,7 @@ public class JwtService {
         return buildToken(claims, String.valueOf(userId), refreshTokenExpiration);
     }
 
-    public String extractUserId(String token) {
+    public String extractAccountId(String token) {
         return extractAllClaims(token).getSubject();
     }
 
