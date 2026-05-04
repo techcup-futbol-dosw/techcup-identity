@@ -53,7 +53,6 @@ public class AccountBuilder {
     public AccountBuilder roles(List<Role> roles) {
         this.roles = roles != null ? new ArrayList<>(roles) : new ArrayList<>();
         return this;
-
     }
 
     public AccountBuilder addRole(Role role) {
@@ -82,27 +81,26 @@ public class AccountBuilder {
         if (email == null || email.isBlank()) {
             throw new IllegalStateException("Email is required");
         }
-
         if (passwordHash == null || passwordHash.isBlank()) {
             throw new IllegalStateException("Password hash is required");
         }
-
         if (createdAt == null) {
             throw new IllegalStateException("CreatedAt is required");
         }
-
-        if (roles == null || roles.isEmpty()){
-            throw  new IllegalStateException("At least one role is required");
+        if (roles == null || roles.isEmpty()) {
+            throw new IllegalStateException("At least one role is required");
         }
     }
-    private void setDefaultFields(){
-        if (status == null || status.isBlank()){
+
+    private void setDefaultFields() {
+        if (status == null || status.isBlank()) {
             status = "ACTIVE";
         }
-        if (updatedAt == null || updatedAt.isBefore(createdAt)){
+        if (updatedAt == null || updatedAt.isBefore(createdAt)) {
             updatedAt = createdAt;
         }
-        if (lastLoginAt != null || lastLoginAt.isBefore(createdAt)){
+        // CORREGIDO: era || en vez de &&, causaba NullPointerException
+        if (lastLoginAt != null && lastLoginAt.isBefore(createdAt)) {
             lastLoginAt = null;
         }
     }
