@@ -1,13 +1,11 @@
 package edu.eci.dosw.service;
 
-import edu.eci.dosw.entity.AccountEntity;
-import edu.eci.dosw.entity.RoleEntity;
-import edu.eci.dosw.mapper.AccountMapper;
-import edu.eci.dosw.model.Account;
-import edu.eci.dosw.model.AccountBuilder;
-import edu.eci.dosw.model.Role;
-import edu.eci.dosw.repository.AccountRepository;
-import edu.eci.dosw.repository.RoleRepository;
+import edu.eci.dosw.dto.AccountResponse;
+import edu.eci.dosw.dto.RegisterAccountRequest;
+import edu.eci.dosw.entity.*;
+import edu.eci.dosw.mapper.*;
+import edu.eci.dosw.model.*;
+import edu.eci.dosw.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -33,7 +30,7 @@ public class AccountService {
                           RoleRepository roleRepository,
                           RoleMapper roleMapper,
                           AccountMapper accountMapper,
-                          PasswordEncoder passwordEncoder){
+                          PasswordEncoder passwordEncoder) {
         this.accountRepository = accountRepository;
         this.roleRepository = roleRepository;
         this.accountMapper = accountMapper;
@@ -42,7 +39,7 @@ public class AccountService {
     }
 
     @Transactional
-    public Account register(RegisterAccountRequest request) {
+    public AccountResponse register(RegisterAccountRequest request) {
         if (accountRepository.findByEmail(request.getEmail()).isPresent()) {
             log.warn("Account registration failed: email already exists email={}", request.getEmail());
             throw new RuntimeException("Email already registered");
@@ -52,18 +49,25 @@ public class AccountService {
         Account account = buildNewAccount(request, playerRole);
         AccountEntity savedEntity = accountRepository.save(accountMapper.toEntity(account));
         log.info("Account registered successfully for email={}", request.getEmail());
-        return accountMapper.toModel(savedEntity);
+        return accountMapper.toResponse(accountMapper.toModel(savedEntity));
     }
 
-
     @Transactional(readOnly = true)
-    public Account findById(Long accountId) {
-        return findAccountByIdOrThrow(accountId);
+    public AccountResponse findById(Long accountId) {
+        Account account = findAccountByIdOrThrow(accountId);
+        return accountMapper.toResponse(account);
     }
 
     @Transactional
     public void deactivate(Long accountId) {
-        //falta implementar
+        Account account = findAccountByIdOrThrow(accountId);
+        if (!account.isActive()) {
+            log.warn("Deactivation skipped: account already inactive accountId={}", accountId);
+            return;
+        }
+        account.setStatus("INACTIVE");
+        accountRepository.save(accountMapper.toEntity(account));
+        log.info("Account deactivated successfully accountId={}", accountId);
     }
 
     @Transactional(readOnly = true)
@@ -83,17 +87,14 @@ public class AccountService {
         return roleMapper.toModel(roleEntity);
     }
 
-
     private void validateRegistrationRules(RegisterAccountRequest request) {
         validateEmailByRelation(request.getEmail(), request.getRelation());
 
-        //if ("student".equalsIgnoreCase(request.getRelation())) {
-        //    if (request.getSemester() == null) {
-        //        throw new RuntimeException("Semester is required for students");
-        //    }
-        //}
-
-        // validar el resto de atributos si es necesario??
+        if ("student".equalsIgnoreCase(request.getRelation())) {
+            if (request.getSemester() == null) {
+                throw new RuntimeException("Semester is required for students");
+            }
+        }
     }
 
     private void validateEmailByRelation(String email, String relation) {
@@ -108,10 +109,12 @@ public class AccountService {
             return;
         }
 
-        if (!email.toLowerCase().endsWith("@escuelaing.edu.co") && !email.toLowerCase().endsWith("@mail.escuelaing.edu.co")) {
+        if (!email.toLowerCase().endsWith("@escuelaing.edu.co")
+                && !email.toLowerCase().endsWith("@mail.escuelaing.edu.co")) {
             throw new RuntimeException("Institutional relation requires institutional email");
         }
     }
+
     private Account buildNewAccount(RegisterAccountRequest request, Role playerRole) {
         LocalDateTime now = LocalDateTime.now();
 
