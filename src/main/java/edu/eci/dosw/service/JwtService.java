@@ -58,8 +58,13 @@ public class JwtService {
         return buildToken(claims, String.valueOf(userId), refreshTokenExpiration);
     }
 
-    public String extractUserId(String token) {
-        return extractAllClaims(token).getSubject();
+    public Long extractUserId(String token) {
+        String subject = extractAllClaims(token).getSubject();
+        try {
+            return Long.valueOf(subject);
+        } catch (NumberFormatException e) {
+            throw new JwtException("Invalid userId format in token");
+        }
     }
 
     public List<String> extractRoles(String token) {

@@ -46,7 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 4. Evitar reautenticar si ya existe autenticación en el contexto
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 // 5. Extraer claims principales del token
-                String userId = jwtService.extractUserId(token);
+                Long userId = jwtService.extractUserId(token);
                 List<String> roles = jwtService.extractRoles(token);
                 List<String> permissions = jwtService.extractPermissions(token);
                 // 6. Convertir roles y permisos en authorities

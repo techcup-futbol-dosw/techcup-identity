@@ -29,7 +29,6 @@ public class Role {
     }
 
     public boolean hasPermission(String permissionName) {
-        if (permissions == null) return false;
         return permissions.stream().anyMatch(p -> p.getName().equalsIgnoreCase(permissionName));
     }
 }

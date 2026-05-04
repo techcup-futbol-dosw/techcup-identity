@@ -9,6 +9,10 @@ import java.util.List;
 @Table(name = "accounts")
 public class AccountEntity {
 
+    public enum AccountStatus {
+        ACTIVE, INACTIVE
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -19,8 +23,9 @@ public class AccountEntity {
     @Column(nullable = false)
     private String password;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private AccountStatus status;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -50,8 +55,8 @@ public class AccountEntity {
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public AccountStatus getStatus() { return status; }
+    public void setStatus(AccountStatus status) { this.status = status; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
