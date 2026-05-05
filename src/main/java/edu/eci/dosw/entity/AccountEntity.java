@@ -36,7 +36,7 @@ public class AccountEntity {
     @Column
     private LocalDateTime lastLoginAt;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY) // correccion: lazy para cargar solo lo necesario hasta que el usuario solicite todo
     @JoinTable(
         name = "account_roles",
         joinColumns = @JoinColumn(name = "account_id"),
