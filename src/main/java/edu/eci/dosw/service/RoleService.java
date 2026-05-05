@@ -97,7 +97,7 @@ public class RoleService {
         return roleMapper.toModel(roleEntity);
     }
     private Role findRoleByNameOrThrow(String roleName) {
-        RoleEntity roleEntity = roleRepository.findByName(roleName)
+        RoleEntity roleEntity = roleRepository.findByNameIgnoreCase(roleName)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
 
         return roleMapper.toModel(roleEntity);

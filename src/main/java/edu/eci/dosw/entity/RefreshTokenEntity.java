@@ -1,6 +1,7 @@
 package edu.eci.dosw.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "refresh_tokens")
@@ -20,6 +21,9 @@ public class RefreshTokenEntity {
     @Column(nullable = false)
     private boolean revoked;
 
+    @Column(nullable = false)
+    private LocalDateTime expiresAt;
+
     public RefreshTokenEntity() {}
 
     public Long getId() { return id; }
@@ -33,4 +37,11 @@ public class RefreshTokenEntity {
 
     public boolean isRevoked() { return revoked; }
     public void setRevoked(boolean revoked) { this.revoked = revoked; }
+
+    public LocalDateTime getExpiresAt() { return expiresAt; }
+    public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
+
+    public boolean isExpired() {
+        return LocalDateTime.now().isAfter(expiresAt);
+    }
 }

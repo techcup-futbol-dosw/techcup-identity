@@ -2,7 +2,9 @@ package edu.eci.dosw.service;
 
 import edu.eci.dosw.dto.AccountResponse;
 import edu.eci.dosw.dto.RegisterAccountRequest;
+import edu.eci.dosw.dto.RegisterAccountRequest.Relation;
 import edu.eci.dosw.entity.*;
+import edu.eci.dosw.entity.AccountEntity.AccountStatus;
 import edu.eci.dosw.mapper.*;
 import edu.eci.dosw.model.*;
 import edu.eci.dosw.repository.*;
@@ -65,7 +67,7 @@ public class AccountService {
             log.warn("Deactivation skipped: account already inactive accountId={}", accountId);
             return;
         }
-        account.setStatus("INACTIVE");
+        account.setStatus(AccountStatus.INACTIVE);
         accountRepository.save(accountMapper.toEntity(account));
         log.info("Account deactivated successfully accountId={}", accountId);
     }
@@ -82,7 +84,7 @@ public class AccountService {
     }
 
     private Role findRoleByNameOrThrow(String roleName) {
-        RoleEntity roleEntity = roleRepository.findByName(roleName)
+        RoleEntity roleEntity = roleRepository.findByNameIgnoreCase(roleName)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
         return roleMapper.toModel(roleEntity);
     }
@@ -90,20 +92,20 @@ public class AccountService {
     private void validateRegistrationRules(RegisterAccountRequest request) {
         validateEmailByRelation(request.getEmail(), request.getRelation());
 
-        if ("student".equalsIgnoreCase(request.getRelation())) {
+        if (request.getRelation() == Relation.ESTUDIANTE) {
             if (request.getSemester() == null) {
                 throw new RuntimeException("Semester is required for students");
             }
         }
     }
 
-    private void validateEmailByRelation(String email, String relation) {
+    private void validateEmailByRelation(String email, Relation relation) {
         if (relation == null || email == null) {
             throw new RuntimeException("Invalid registration data");
         }
 
-        if ("family".equalsIgnoreCase(relation)) {
-            if (!email.toLowerCase().endsWith("@gmail.com")) {
+        if (relation == Relation.FAMILIAR) {
+            if (email == null || !email.toLowerCase().endsWith("@gmail.com")) {
                 throw new RuntimeException("Family accounts must use a Gmail address");
             }
             return;

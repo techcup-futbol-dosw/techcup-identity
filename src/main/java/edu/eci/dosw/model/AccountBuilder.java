@@ -4,12 +4,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.eci.dosw.entity.AccountEntity.AccountStatus;
+
 public class AccountBuilder {
 
     private Long id;
     private String email;
     private String passwordHash;
-    private String status;
+    private AccountStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime lastLoginAt;
@@ -30,7 +32,7 @@ public class AccountBuilder {
         return this;
     }
 
-    public AccountBuilder status(String status) {
+    public AccountBuilder status(AccountStatus status) {
         this.status = status;
         return this;
     }
@@ -93,13 +95,12 @@ public class AccountBuilder {
     }
 
     private void setDefaultFields() {
-        if (status == null || status.isBlank()) {
-            status = "ACTIVE";
+        if (status == null) {
+            status = AccountStatus.ACTIVE;
         }
         if (updatedAt == null || updatedAt.isBefore(createdAt)) {
             updatedAt = createdAt;
         }
-        // CORREGIDO: era || en vez de &&, causaba NullPointerException
         if (lastLoginAt != null && lastLoginAt.isBefore(createdAt)) {
             lastLoginAt = null;
         }

@@ -72,19 +72,15 @@ public class AuthService {
         }
 
         RefreshTokenEntity storedToken = findRefreshTokenEntityOrThrow(refreshTokenValue, "Refresh");
-
         if (storedToken.isRevoked()) {
             log.warn("Refresh failed: refresh token revoked");
             throw new RuntimeException("Refresh token revoked");
         }
 
-        Long accountId = Long.valueOf(jwtService.extractUserId(refreshTokenValue));
+        Long accountId = jwtService.extractUserId(refreshTokenValue);
         Account account = findAccountByIdOrThrow(accountId);
-
         validateActiveAccount(account, "Refresh");
-
         revokeRefreshToken(storedToken);
-
         String newRefreshToken = jwtService.generateRefreshToken(accountId);
         saveRefreshToken(account, newRefreshToken);
 
@@ -112,18 +108,26 @@ public class AuthService {
             return invalidValidationResponse();
         }
 
-        String accountId = jwtService.extractUserId(token);
+        Long accountId;
+        try {
+            accountId = jwtService.extractUserId(token);
+        } catch (NumberFormatException e) {
+            log.warn("Token validation failed: invalid accountId format");
+            return invalidValidationResponse();
+        }
+
         List<String> roles = jwtService.extractRoles(token);
         List<String> permissions = jwtService.extractPermissions(token);
         String tokenType = jwtService.extractTokenType(token);
 
-        Optional<AccountEntity> optionalAccountEntity = accountRepository.findById(Long.valueOf(accountId));
+        Optional<AccountEntity> optionalAccountEntity = accountRepository.findById(accountId);
         if (optionalAccountEntity.isEmpty()) {
             log.warn("Token validation failed: account not found accountId={}", accountId);
             return invalidValidationResponse();
         }
 
         Account account = accountMapper.toModel(optionalAccountEntity.get());
+
         if (!account.isActive()) {
             log.warn("Token validation failed: inactive account accountId={}", accountId);
             return invalidValidationResponse();

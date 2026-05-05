@@ -15,7 +15,7 @@ public class RoleEntity {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY) // correccion: lazy para cargar solo lo necesario hasta que el usuario solicite todo
     @JoinTable(
         name = "role_permissions",
         joinColumns = @JoinColumn(name = "role_id"),
