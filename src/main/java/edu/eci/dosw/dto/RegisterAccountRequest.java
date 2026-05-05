@@ -4,11 +4,6 @@ import jakarta.validation.constraints.*;
 
 public class RegisterAccountRequest {
 
-    public enum Relation {
-        ESTUDIANTE, GRADUADO, PROFESOR, PERSONAL_ADMIN, FAMILIAR,
-        CAPITAN, ORGANIZADOR, ARBITRO, ADMINISTRADOR 
-    }
-
     @NotBlank
     @Email
     private String email;
@@ -20,7 +15,7 @@ public class RegisterAccountRequest {
     @NotNull
     private Relation relation;
 
-    private String program;
+    private Program program;
 
     @Min(value = 1, message = "Semester must be at least 1")
     @Max(value = 10, message = "Semester must be at most 10")
@@ -37,8 +32,8 @@ public class RegisterAccountRequest {
     public Relation getRelation() { return relation; }
     public void setRelation(Relation relation) { this.relation = relation; }
 
-    public String getProgram() { return program; }
-    public void setProgram(String program) { this.program = program; }
+    public Program getProgram() { return program; }
+    public void setProgram(Program program) { this.program = program; }
 
     public Integer getSemester() { return semester; }
     public void setSemester(Integer semester) { this.semester = semester; }

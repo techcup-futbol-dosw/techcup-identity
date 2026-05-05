@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.eci.dosw.entity.AccountEntity.AccountStatus;
+import edu.eci.dosw.entity.AccountStatus;
 
 public class AccountBuilder {
 
