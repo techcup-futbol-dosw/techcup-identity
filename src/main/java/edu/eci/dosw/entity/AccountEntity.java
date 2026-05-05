@@ -9,10 +9,6 @@ import java.util.List;
 @Table(name = "accounts")
 public class AccountEntity {
 
-    public enum AccountStatus {
-        ACTIVE, INACTIVE
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

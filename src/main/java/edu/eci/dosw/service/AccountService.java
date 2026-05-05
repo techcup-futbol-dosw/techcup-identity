@@ -2,9 +2,9 @@ package edu.eci.dosw.service;
 
 import edu.eci.dosw.dto.AccountResponse;
 import edu.eci.dosw.dto.RegisterAccountRequest;
-import edu.eci.dosw.dto.RegisterAccountRequest.Relation;
+import edu.eci.dosw.dto.Relation;
 import edu.eci.dosw.entity.*;
-import edu.eci.dosw.entity.AccountEntity.AccountStatus;
+import edu.eci.dosw.entity.AccountStatus;
 import edu.eci.dosw.mapper.*;
 import edu.eci.dosw.model.*;
 import edu.eci.dosw.repository.*;
