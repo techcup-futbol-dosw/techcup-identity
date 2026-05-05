@@ -1,6 +1,8 @@
 package edu.eci.dosw.service;
 
+import edu.eci.dosw.dto.AccountResponse;
 import edu.eci.dosw.dto.RegisterAccountRequest;
+import edu.eci.dosw.dto.RegisterAccountRequest.Relation;
 import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.entity.RoleEntity;
 import edu.eci.dosw.mapper.AccountMapper;
@@ -48,11 +50,11 @@ class AccountServiceTest {
 
     @Test
     void register_ShouldCreateAccount_WhenRequestIsValid() {
-        // Arrange
         RegisterAccountRequest request = new RegisterAccountRequest();
         request.setEmail("juan@escuelaing.edu.co");
         request.setPassword("123456");
-        request.setRelation("student");
+        request.setRelation(Relation.ESTUDIANTE);
+        request.setSemester(3); // ESTUDIANTE requiere semester
 
         RoleEntity roleEntity = new RoleEntity();
         roleEntity.setName("PLAYER");
@@ -60,67 +62,63 @@ class AccountServiceTest {
         Role playerRole = new Role();
         playerRole.setName("PLAYER");
 
-        AccountEntity entityToSave = new AccountEntity();
         AccountEntity savedEntity = new AccountEntity();
         savedEntity.setId(1L);
-        AccountBuilder accountBuilder = new AccountBuilder();
-        accountBuilder.email("juan@escuelaing.edu.co")
-                .passwordHash("123456")
-                .addRole(new Role())
-                .createdAt(LocalDateTime.now());
 
-        Account savedModel = accountBuilder.build();
+        Account savedModel = new AccountBuilder()
+                .email("juan@escuelaing.edu.co")
+                .passwordHash("encoded-password")
+                .addRole(playerRole)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        AccountResponse expectedResponse = new AccountResponse();
+        expectedResponse.setEmail("juan@escuelaing.edu.co");
 
         when(accountRepository.findByEmail("juan@escuelaing.edu.co"))
                 .thenReturn(Optional.empty());
-
-        when(roleRepository.findByName("PLAYER"))
+        when(roleRepository.findByNameIgnoreCase("PLAYER"))
                 .thenReturn(Optional.of(roleEntity));
-
         when(roleMapper.toModel(roleEntity))
                 .thenReturn(playerRole);
-
-        when(accountMapper.toEntity(any(Account.class)))
-                .thenReturn(entityToSave);
-
-        when(accountRepository.save(entityToSave))
-                .thenReturn(savedEntity);
-
-        when(accountMapper.toModel(savedEntity))
-                .thenReturn(savedModel);
         when(passwordEncoder.encode("123456"))
                 .thenReturn("encoded-password");
+        when(accountMapper.toEntity(any(Account.class)))
+                .thenReturn(savedEntity);
+        when(accountRepository.save(savedEntity))
+                .thenReturn(savedEntity);
+        when(accountMapper.toModel(savedEntity))
+                .thenReturn(savedModel);
+        when(accountMapper.toResponse(savedModel))
+                .thenReturn(expectedResponse);
 
-        // Act
-        Account result = accountService.register(request);
+        AccountResponse result = accountService.register(request);
 
-        // Assert
         assertNotNull(result);
         assertEquals("juan@escuelaing.edu.co", result.getEmail());
 
         verify(accountRepository).findByEmail("juan@escuelaing.edu.co");
-        verify(roleRepository).findByName("PLAYER");
+        verify(roleRepository).findByNameIgnoreCase("PLAYER");
         verify(roleMapper).toModel(roleEntity);
-        verify(accountRepository).save(entityToSave);
+        verify(passwordEncoder).encode("123456");
+        verify(accountRepository).save(any(AccountEntity.class));
         verify(accountMapper).toModel(savedEntity);
+        verify(accountMapper).toResponse(savedModel);
 
         ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
         verify(accountMapper).toEntity(accountCaptor.capture());
-
         Account builtAccount = accountCaptor.getValue();
         assertEquals("juan@escuelaing.edu.co", builtAccount.getEmail());
         assertEquals("encoded-password", builtAccount.getPassword());
         assertNotNull(builtAccount.getCreatedAt());
-
     }
 
     @Test
     void register_ShouldThrowException_WhenEmailAlreadyExists() {
-        // Arrange
         RegisterAccountRequest request = new RegisterAccountRequest();
         request.setEmail("juan@escuelaing.edu.co");
         request.setPassword("123456");
-        request.setRelation("student");
+        request.setRelation(Relation.ESTUDIANTE);
 
         AccountEntity existing = new AccountEntity();
         existing.setId(99L);
@@ -128,11 +126,9 @@ class AccountServiceTest {
         when(accountRepository.findByEmail("juan@escuelaing.edu.co"))
                 .thenReturn(Optional.of(existing));
 
-        // Act
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> accountService.register(request));
 
-        // Assert
         assertEquals("Email already registered", ex.getMessage());
 
         verify(accountRepository).findByEmail("juan@escuelaing.edu.co");
@@ -142,20 +138,17 @@ class AccountServiceTest {
 
     @Test
     void register_ShouldThrowException_WhenFamilyEmailIsNotGmail() {
-        // Arrange
         RegisterAccountRequest request = new RegisterAccountRequest();
         request.setEmail("persona@yahoo.com");
         request.setPassword("123456");
-        request.setRelation("family");
+        request.setRelation(Relation.FAMILIAR);
 
         when(accountRepository.findByEmail("persona@yahoo.com"))
                 .thenReturn(Optional.empty());
 
-        // Act
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> accountService.register(request));
 
-        // Assert
         assertEquals("Family accounts must use a Gmail address", ex.getMessage());
 
         verify(accountRepository).findByEmail("persona@yahoo.com");
@@ -165,20 +158,17 @@ class AccountServiceTest {
 
     @Test
     void register_ShouldThrowException_WhenInstitutionalRelationHasNonInstitutionalEmail() {
-        // Arrange
         RegisterAccountRequest request = new RegisterAccountRequest();
         request.setEmail("juan@gmail.com");
         request.setPassword("123456");
-        request.setRelation("student");
+        request.setRelation(Relation.ESTUDIANTE);
 
         when(accountRepository.findByEmail("juan@gmail.com"))
                 .thenReturn(Optional.empty());
 
-        // Act
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> accountService.register(request));
 
-        // Assert
         assertEquals("Institutional relation requires institutional email", ex.getMessage());
 
         verify(accountRepository).findByEmail("juan@gmail.com");
@@ -188,100 +178,92 @@ class AccountServiceTest {
 
     @Test
     void register_ShouldThrowException_WhenEmailOrRelationIsNull() {
-        // Arrange
         RegisterAccountRequest request = new RegisterAccountRequest();
-        request.setEmail(null);
+        request.setEmail("juan@escuelaing.edu.co");
         request.setPassword("123456");
-        request.setRelation(null);
+        request.setRelation(null); // solo relation null es suficiente para disparar la validación
 
-        when(accountRepository.findByEmail(null))
+        when(accountRepository.findByEmail("juan@escuelaing.edu.co"))
                 .thenReturn(Optional.empty());
 
-        // Act
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> accountService.register(request));
 
-        // Assert
         assertEquals("Invalid registration data", ex.getMessage());
 
-        verify(accountRepository).findByEmail(null);
+        verify(accountRepository).findByEmail("juan@escuelaing.edu.co");
         verifyNoInteractions(roleRepository, roleMapper, accountMapper, passwordEncoder);
         verify(accountRepository, never()).save(any());
     }
 
     @Test
     void register_ShouldThrowException_WhenRoleDoesNotExist() {
-        // Arrange
         RegisterAccountRequest request = new RegisterAccountRequest();
         request.setEmail("juan@escuelaing.edu.co");
         request.setPassword("123456");
-        request.setRelation("student");
+        request.setRelation(Relation.ESTUDIANTE);
+        request.setSemester(3);
 
         when(accountRepository.findByEmail("juan@escuelaing.edu.co"))
                 .thenReturn(Optional.empty());
-
-        when(roleRepository.findByName("PLAYER"))
+        when(roleRepository.findByNameIgnoreCase("PLAYER"))
                 .thenReturn(Optional.empty());
 
-        // Act
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> accountService.register(request));
 
-        // Assert
         assertEquals("Role not found", ex.getMessage());
 
         verify(accountRepository).findByEmail("juan@escuelaing.edu.co");
-        verify(roleRepository).findByName("PLAYER");
+        verify(roleRepository).findByNameIgnoreCase("PLAYER");
         verifyNoInteractions(roleMapper, accountMapper, passwordEncoder);
         verify(accountRepository, never()).save(any());
     }
 
     @Test
     void findById_ShouldReturnAccount_WhenAccountExists() {
-        // Arrange
         Long accountId = 1L;
 
         AccountEntity entity = new AccountEntity();
         entity.setId(accountId);
 
-        AccountBuilder accountBuilder = new AccountBuilder();
-        accountBuilder.email("juan@escuelaing.edu.co")
-                .passwordHash("123456")
+        Account model = new AccountBuilder()
+                .email("juan@escuelaing.edu.co")
+                .passwordHash("encoded-password")
                 .createdAt(LocalDateTime.now())
-                .addRole(new Role());
+                .addRole(new Role())
+                .build();
 
-        Account model = accountBuilder.build();
+        AccountResponse expectedResponse = new AccountResponse();
+        expectedResponse.setEmail("juan@escuelaing.edu.co");
 
         when(accountRepository.findById(accountId))
                 .thenReturn(Optional.of(entity));
-
         when(accountMapper.toModel(entity))
                 .thenReturn(model);
+        when(accountMapper.toResponse(model))
+                .thenReturn(expectedResponse);
 
-        // Act
-        Account result = accountService.findById(accountId);
+        AccountResponse result = accountService.findById(accountId);
 
-        // Assert
         assertNotNull(result);
         assertEquals("juan@escuelaing.edu.co", result.getEmail());
 
         verify(accountRepository).findById(accountId);
         verify(accountMapper).toModel(entity);
+        verify(accountMapper).toResponse(model);
     }
 
     @Test
     void findById_ShouldThrowException_WhenAccountDoesNotExist() {
-        // Arrange
         Long accountId = 999L;
 
         when(accountRepository.findById(accountId))
                 .thenReturn(Optional.empty());
 
-        // Act
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> accountService.findById(accountId));
 
-        // Assert
         assertEquals("Account not found", ex.getMessage());
 
         verify(accountRepository).findById(accountId);
@@ -290,32 +272,26 @@ class AccountServiceTest {
 
     @Test
     void existsByEmail_ShouldReturnTrue_WhenEmailExists() {
-        // Arrange
         String email = "juan@escuelaing.edu.co";
 
         when(accountRepository.findByEmail(email))
                 .thenReturn(Optional.of(new AccountEntity()));
 
-        // Act
         boolean result = accountService.existsByEmail(email);
 
-        // Assert
         assertTrue(result);
         verify(accountRepository).findByEmail(email);
     }
 
     @Test
     void existsByEmail_ShouldReturnFalse_WhenEmailDoesNotExist() {
-        // Arrange
         String email = "juan@escuelaing.edu.co";
 
         when(accountRepository.findByEmail(email))
                 .thenReturn(Optional.empty());
 
-        // Act
         boolean result = accountService.existsByEmail(email);
 
-        // Assert
         assertFalse(result);
         verify(accountRepository).findByEmail(email);
     }

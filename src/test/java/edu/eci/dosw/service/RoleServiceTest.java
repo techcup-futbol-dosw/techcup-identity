@@ -73,7 +73,7 @@ class RoleServiceTest {
         when(accountMapper.toModel(accountEntity))
                 .thenReturn(account);
 
-        when(roleRepository.findByName(roleName))
+        when(roleRepository.findByNameIgnoreCase(roleName))
                 .thenReturn(Optional.of(roleEntity));
 
         when(roleMapper.toModel(roleEntity))
@@ -84,7 +84,7 @@ class RoleServiceTest {
 
         // Assert
         verify(accountRepository).findById(accountId);
-        verify(roleRepository).findByName(roleName);
+        verify(roleRepository).findByNameIgnoreCase(roleName);
         verify(accountRepository, never()).save(any());
         verify(accountMapper, never()).toEntity(any());
 
@@ -132,7 +132,7 @@ class RoleServiceTest {
         when(accountMapper.toModel(accountEntity))
                 .thenReturn(account);
 
-        when(roleRepository.findByName(roleName))
+        when(roleRepository.findByNameIgnoreCase(roleName))
                 .thenReturn(Optional.empty());
 
         // Act
@@ -143,7 +143,7 @@ class RoleServiceTest {
         assertEquals("Role not found", ex.getMessage());
 
         verify(accountRepository).findById(accountId);
-        verify(roleRepository).findByName(roleName);
+        verify(roleRepository).findByNameIgnoreCase(roleName);
         verify(accountRepository, never()).save(any());
     }
 
@@ -173,7 +173,7 @@ class RoleServiceTest {
         when(accountMapper.toModel(accountEntity))
                 .thenReturn(account);
 
-        when(roleRepository.findByName(roleName))
+        when(roleRepository.findByNameIgnoreCase(roleName))
                 .thenReturn(Optional.of(roleEntity));
 
         when(roleMapper.toModel(roleEntity))
@@ -187,7 +187,7 @@ class RoleServiceTest {
 
         // Assert
         verify(accountRepository).findById(accountId);
-        verify(roleRepository).findByName(roleName);
+        verify(roleRepository).findByNameIgnoreCase(roleName);
         verify(accountMapper).toEntity(account);
         verify(accountRepository).save(accountEntity);
 
@@ -225,7 +225,7 @@ class RoleServiceTest {
         when(accountMapper.toModel(accountEntity))
                 .thenReturn(account);
 
-        when(roleRepository.findByName(roleName))
+        when(roleRepository.findByNameIgnoreCase(roleName))
                 .thenReturn(Optional.of(roleEntity));
 
         when(roleMapper.toModel(roleEntity))
@@ -236,7 +236,7 @@ class RoleServiceTest {
 
         // Assert
         verify(accountRepository).findById(accountId);
-        verify(roleRepository).findByName(roleName);
+        verify(roleRepository).findByNameIgnoreCase(roleName);
         verify(accountRepository, never()).save(any());
         verify(accountMapper, never()).toEntity(any());
 

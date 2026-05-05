@@ -37,7 +37,7 @@ class JwtServiceTest {
         assertTrue(jwtService.isTokenValid(token));
         assertFalse(jwtService.isRefreshTokenValid(token));
 
-        assertEquals("1", jwtService.extractAccountId(token));
+        assertEquals(1L, jwtService.extractUserId(token));
         assertEquals("ACCESS", jwtService.extractTokenType(token));
         assertEquals(roles, jwtService.extractRoles(token));
         assertEquals(permissions, jwtService.extractPermissions(token));
@@ -65,7 +65,7 @@ class JwtServiceTest {
         assertTrue(jwtService.isRefreshTokenValid(token));
         assertFalse(jwtService.isTokenValid(token));
 
-        assertEquals("1", jwtService.extractAccountId(token));
+        assertEquals(1L, jwtService.extractUserId(token));
         assertEquals("REFRESH", jwtService.extractTokenType(token));
         assertEquals(List.of(), jwtService.extractRoles(token));
         assertEquals(List.of(), jwtService.extractPermissions(token));
