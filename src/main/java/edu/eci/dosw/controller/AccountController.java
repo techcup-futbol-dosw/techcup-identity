@@ -20,17 +20,15 @@ public class AccountController {
     }
     @PostMapping("/register")
     public ResponseEntity<AccountResponse> register(@Valid @RequestBody RegisterAccountRequest request){
-        //AccountResponse response = accountService.register(request);
-        //return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        return ResponseEntity.status(HttpStatus.CREATED).body(null);
+        AccountResponse response = accountService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PreAuthorize("hasAuthority('account:read:any') or @accountAccessPolicy.canReadAccount(#accountId, authentication)")
     @GetMapping("/{accountId}")
     public ResponseEntity<AccountResponse> getById(@PathVariable Long accountId) {
-        //AccountResponse response = accountService.findById(accountId);
-        //return ResponseEntity.ok(response);
-        return ResponseEntity.accepted().body(null);
+        AccountResponse response = accountService.findById(accountId);
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("hasAuthority('account:deactivate')")
