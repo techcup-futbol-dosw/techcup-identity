@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +21,7 @@ import edu.eci.dosw.repository.*;
 import edu.eci.dosw.model.*;
 import edu.eci.dosw.entity.*;
 
+import edu.eci.dosw.exception.AccountNotFoundException;
 
 @Service
 public class AuthService {
