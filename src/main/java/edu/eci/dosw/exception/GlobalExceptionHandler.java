@@ -3,6 +3,7 @@ package edu.eci.dosw.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,158 +14,63 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(InvalidRegistrationDataException.class)
-    public ResponseEntity<ApiErrorResponse> handleInvalidRegistrationData(
-            InvalidRegistrationDataException ex,
+    @ExceptionHandler({
+            InvalidRegistrationDataException.class,
+            InvalidEmailForRelationException.class,
+            MissingRequiredFieldException.class,
+            InvalidAccountBuildException.class
+    })
+    public ResponseEntity<ApiErrorResponse> handleBadRequestExceptions(
+            BusinessException ex,
             HttpServletRequest request
     ) {
-        ApiErrorResponse response = ApiErrorResponse.of(
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    }
-
-    @ExceptionHandler(InvalidEmailForRelationException.class)
-    public ResponseEntity<ApiErrorResponse> handleInvalidEmailForRelation(
-            InvalidEmailForRelationException ex,
-            HttpServletRequest request
-    ) {
-        ApiErrorResponse response = ApiErrorResponse.of(
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    }
-
-    @ExceptionHandler(MissingRequiredFieldException.class)
-    public ResponseEntity<ApiErrorResponse> handleMissingRequiredField(
-            MissingRequiredFieldException ex,
-            HttpServletRequest request
-    ) {
-        ApiErrorResponse response = ApiErrorResponse.of(
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
 
     @ExceptionHandler(EmailAlreadyRegisteredException.class)
-    public ResponseEntity<ApiErrorResponse> handleEmailAlreadyRegistered(
+    public ResponseEntity<ApiErrorResponse> handleConflictExceptions(
             EmailAlreadyRegisteredException ex,
             HttpServletRequest request
     ) {
-        ApiErrorResponse response = ApiErrorResponse.of(
-                HttpStatus.CONFLICT.value(),
-                HttpStatus.CONFLICT.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
-    @ExceptionHandler(AccountNotFoundException.class)
-    public ResponseEntity<ApiErrorResponse> handleAccountNotFound(
-            AccountNotFoundException ex,
+    @ExceptionHandler({
+            AccountNotFoundException.class,
+            RoleNotFoundException.class
+    })
+    public ResponseEntity<ApiErrorResponse> handleNotFoundExceptions(
+            BusinessException ex,
             HttpServletRequest request
     ) {
-        ApiErrorResponse response = ApiErrorResponse.of(
-                HttpStatus.NOT_FOUND.value(),
-                HttpStatus.NOT_FOUND.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
 
-    @ExceptionHandler(RoleNotFoundException.class)
-    public ResponseEntity<ApiErrorResponse> handleRoleNotFound(
-            RoleNotFoundException ex,
+    @ExceptionHandler({
+            InvalidCredentialsException.class,
+            InvalidRefreshTokenException.class,
+            RefreshTokenNotFoundException.class,
+            RefreshTokenRevokedException.class,
+            AccountNotActiveException.class
+    })
+    public ResponseEntity<ApiErrorResponse> handleUnauthorizedExceptions(
+            BusinessException ex,
             HttpServletRequest request
     ) {
-        ApiErrorResponse response = ApiErrorResponse.of(
-                HttpStatus.NOT_FOUND.value(),
-                HttpStatus.NOT_FOUND.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
     }
 
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<ApiErrorResponse> handleInvalidCredentials(
-            InvalidCredentialsException ex,
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(
+            DataIntegrityViolationException ex,
             HttpServletRequest request
     ) {
-        ApiErrorResponse response = ApiErrorResponse.of(
-                HttpStatus.UNAUTHORIZED.value(),
-                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI()
+        log.error("Database integrity violation", ex);
+        return buildErrorResponse(
+                HttpStatus.CONFLICT,
+                "Database integrity violation",
+                request
         );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-    }
-
-    @ExceptionHandler(InvalidRefreshTokenException.class)
-    public ResponseEntity<ApiErrorResponse> handleInvalidRefreshToken(
-            InvalidRefreshTokenException ex,
-            HttpServletRequest request
-    ) {
-        ApiErrorResponse response = ApiErrorResponse.of(
-                HttpStatus.UNAUTHORIZED.value(),
-                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-    }
-
-    @ExceptionHandler(RefreshTokenNotFoundException.class)
-    public ResponseEntity<ApiErrorResponse> handleRefreshTokenNotFound(
-            RefreshTokenNotFoundException ex,
-            HttpServletRequest request
-    ) {
-        ApiErrorResponse response = ApiErrorResponse.of(
-                HttpStatus.UNAUTHORIZED.value(),
-                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-    }
-
-    @ExceptionHandler(RefreshTokenRevokedException.class)
-    public ResponseEntity<ApiErrorResponse> handleRefreshTokenRevoked(
-            RefreshTokenRevokedException ex,
-            HttpServletRequest request
-    ) {
-        ApiErrorResponse response = ApiErrorResponse.of(
-                HttpStatus.UNAUTHORIZED.value(),
-                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-    }
-
-    @ExceptionHandler(AccountNotActiveException.class)
-    public ResponseEntity<ApiErrorResponse> handleAccountNotActive(
-            AccountNotActiveException ex,
-            HttpServletRequest request
-    ) {
-        ApiErrorResponse response = ApiErrorResponse.of(
-                HttpStatus.UNAUTHORIZED.value(),
-                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
     @ExceptionHandler(BusinessException.class)
@@ -172,13 +78,7 @@ public class GlobalExceptionHandler {
             BusinessException ex,
             HttpServletRequest request
     ) {
-        ApiErrorResponse response = ApiErrorResponse.of(
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
 
     @ExceptionHandler(Exception.class)
@@ -187,28 +87,25 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         log.error("Unhandled exception", ex);
-
-        ApiErrorResponse response = ApiErrorResponse.of(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+        return buildErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred",
-                request.getRequestURI()
+                request
         );
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
-    @ExceptionHandler(InvalidAccountBuildException.class)
-    public ResponseEntity<ApiErrorResponse> handleInvalidAccountBuild(
-            InvalidAccountBuildException ex,
+
+    private ResponseEntity<ApiErrorResponse> buildErrorResponse(
+            HttpStatus status,
+            String message,
             HttpServletRequest request
     ) {
         ApiErrorResponse response = ApiErrorResponse.of(
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                ex.getMessage(),
+                status.value(),
+                status.getReasonPhrase(),
+                message,
                 request.getRequestURI()
         );
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return ResponseEntity.status(status).body(response);
     }
 }

@@ -1,10 +1,14 @@
 package edu.eci.dosw.exception;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
 
 public class ApiErrorResponse {
 
-    private String timestamp;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime timestamp;
+
     private int status;
     private String error;
     private String message;
@@ -13,7 +17,7 @@ public class ApiErrorResponse {
     public ApiErrorResponse() {
     }
 
-    public ApiErrorResponse(String timestamp, int status, String error, String message, String path) {
+    public ApiErrorResponse(LocalDateTime timestamp, int status, String error, String message, String path) {
         this.timestamp = timestamp;
         this.status = status;
         this.error = error;
@@ -23,7 +27,7 @@ public class ApiErrorResponse {
 
     public static ApiErrorResponse of(int status, String error, String message, String path) {
         return new ApiErrorResponse(
-                LocalDateTime.now().toString(),
+                LocalDateTime.now(),
                 status,
                 error,
                 message,
@@ -31,11 +35,11 @@ public class ApiErrorResponse {
         );
     }
 
-    public String getTimestamp() {
+    public LocalDateTime getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(String timestamp) {
+    public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
     }
 
