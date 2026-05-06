@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -17,6 +19,8 @@ import edu.eci.dosw.mapper.*;
 import edu.eci.dosw.repository.*;
 import edu.eci.dosw.model.*;
 import edu.eci.dosw.entity.*;
+
+import edu.eci.dosw.exception.AccountNotFoundException;
 
 @Service
 public class AuthService {
@@ -173,12 +177,16 @@ public class AuthService {
 
     private void saveRefreshToken(Account account, String tokenValue) {
         AccountEntity accountEntity = accountRepository.findById(account.getId())
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+                .orElseThrow(() -> new AccountNotFoundException(account.getId()));
 
         RefreshTokenEntity tokenEntity = new RefreshTokenEntity();
         tokenEntity.setToken(tokenValue);
         tokenEntity.setAccount(accountEntity);
         tokenEntity.setRevoked(false);
+        tokenEntity.setExpiresAt(
+                LocalDateTime.now().plus(jwtService.getRefreshTokenExpiration(), ChronoUnit.MILLIS)
+        );
+
         refreshTokenRepository.save(tokenEntity);
     }
 
