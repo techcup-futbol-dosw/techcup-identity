@@ -1,10 +1,11 @@
 package edu.eci.dosw.model;
 
+import edu.eci.dosw.entity.AccountStatus;
+import edu.eci.dosw.exception.InvalidAccountBuildException;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import edu.eci.dosw.entity.AccountStatus;
 
 public class AccountBuilder {
 
@@ -67,6 +68,7 @@ public class AccountBuilder {
     public Account build() {
         validateRequiredFields();
         setDefaultFields();
+
         return new Account(
                 id,
                 email,
@@ -81,16 +83,19 @@ public class AccountBuilder {
 
     private void validateRequiredFields() {
         if (email == null || email.isBlank()) {
-            throw new IllegalStateException("Email is required");
+            throw new InvalidAccountBuildException("Email is required");
         }
+
         if (passwordHash == null || passwordHash.isBlank()) {
-            throw new IllegalStateException("Password hash is required");
+            throw new InvalidAccountBuildException("Password hash is required");
         }
+
         if (createdAt == null) {
-            throw new IllegalStateException("CreatedAt is required");
+            throw new InvalidAccountBuildException("CreatedAt is required");
         }
+
         if (roles == null || roles.isEmpty()) {
-            throw new IllegalStateException("At least one role is required");
+            throw new InvalidAccountBuildException("At least one role is required");
         }
     }
 
@@ -98,9 +103,11 @@ public class AccountBuilder {
         if (status == null) {
             status = AccountStatus.ACTIVE;
         }
+
         if (updatedAt == null || updatedAt.isBefore(createdAt)) {
             updatedAt = createdAt;
         }
+
         if (lastLoginAt != null && lastLoginAt.isBefore(createdAt)) {
             lastLoginAt = null;
         }
