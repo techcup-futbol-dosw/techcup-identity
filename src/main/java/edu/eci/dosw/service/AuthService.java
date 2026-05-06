@@ -1,5 +1,6 @@
 package edu.eci.dosw.service;
 
+import edu.eci.dosw.exception.*;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +55,7 @@ public class AuthService {
 
         if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
             log.warn("Login failed: invalid password for accountId={}", account.getId());
-            throw new RuntimeException("Invalid credentials");
+            throw new InvalidCredentialsException();
         }
 
         validateActiveAccount(account, "Login");
@@ -72,19 +73,23 @@ public class AuthService {
 
         if (!jwtService.isRefreshTokenValid(refreshTokenValue)) {
             log.warn("Refresh failed: invalid or expired refresh token");
-            throw new RuntimeException("Invalid or expired refresh token");
+            throw new InvalidRefreshTokenException();
         }
 
         RefreshTokenEntity storedToken = findRefreshTokenEntityOrThrow(refreshTokenValue, "Refresh");
+
         if (storedToken.isRevoked()) {
             log.warn("Refresh failed: refresh token revoked");
-            throw new RuntimeException("Refresh token revoked");
+            throw new RefreshTokenRevokedException();
         }
 
         Long accountId = jwtService.extractUserId(refreshTokenValue);
         Account account = findAccountByIdOrThrow(accountId);
+
         validateActiveAccount(account, "Refresh");
+
         revokeRefreshToken(storedToken);
+
         String newRefreshToken = jwtService.generateRefreshToken(accountId);
         saveRefreshToken(account, newRefreshToken);
 
@@ -144,14 +149,16 @@ public class AuthService {
         AccountEntity accountEntity = accountRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     log.warn("Login failed: account not found for email={}", email);
-                    return new RuntimeException("Invalid credentials");
+                    return new InvalidCredentialsException();
                 });
+
         return accountMapper.toModel(accountEntity);
     }
 
     private Account findAccountByIdOrThrow(Long accountId) {
         AccountEntity accountEntity = accountRepository.findById(accountId)
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
+
         return accountMapper.toModel(accountEntity);
     }
 
@@ -159,14 +166,14 @@ public class AuthService {
         return refreshTokenRepository.findByToken(tokenValue)
                 .orElseThrow(() -> {
                     log.warn("{} failed: refresh token not found", action);
-                    return new RuntimeException("Refresh token not found");
+                    return new RefreshTokenNotFoundException();
                 });
     }
 
     private void validateActiveAccount(Account account, String action) {
         if (!account.isActive()) {
             log.warn("{} failed: inactive account accountId={}", action, account.getId());
-            throw new RuntimeException("Account not active");
+            throw new AccountNotActiveException(account.getId());
         }
     }
 
@@ -183,9 +190,6 @@ public class AuthService {
         tokenEntity.setToken(tokenValue);
         tokenEntity.setAccount(accountEntity);
         tokenEntity.setRevoked(false);
-        tokenEntity.setExpiresAt(
-                LocalDateTime.now().plus(jwtService.getRefreshTokenExpiration(), ChronoUnit.MILLIS)
-        );
 
         refreshTokenRepository.save(tokenEntity);
     }
@@ -215,7 +219,11 @@ public class AuthService {
 
     private List<String> extractRoleNames(Long accountId) {
         List<Role> roles = roleService.getRolesByAccount(accountId);
-        if (roles == null) return Collections.emptyList();
+
+        if (roles == null) {
+            return Collections.emptyList();
+        }
+
         return roles.stream()
                 .map(Role::getName)
                 .distinct()
@@ -224,7 +232,11 @@ public class AuthService {
 
     private List<String> extractPermissionNames(Long accountId) {
         List<Role> roles = roleService.getRolesByAccount(accountId);
-        if (roles == null || roles.isEmpty()) return Collections.emptyList();
+
+        if (roles == null || roles.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         return roles.stream()
                 .map(Role::getId)
                 .map(roleService::getPermissions)
