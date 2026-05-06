@@ -109,6 +109,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(status).body(response);
     }*/
+   
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiErrorResponse> handleAccessDenied(
             AccessDeniedException ex,
