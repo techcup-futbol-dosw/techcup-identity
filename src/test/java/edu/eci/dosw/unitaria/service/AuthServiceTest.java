@@ -1,4 +1,4 @@
-package edu.eci.dosw.service;
+package edu.eci.dosw.unitaria.service;
 
 import edu.eci.dosw.dto.*;
 import edu.eci.dosw.entity.*;
@@ -6,6 +6,10 @@ import edu.eci.dosw.entity.AccountStatus;
 import edu.eci.dosw.mapper.*;
 import edu.eci.dosw.model.*;
 import edu.eci.dosw.repository.*;
+import edu.eci.dosw.service.AuthService;
+import edu.eci.dosw.service.JwtService;
+import edu.eci.dosw.service.RoleService;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

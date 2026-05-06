@@ -1,4 +1,4 @@
-package edu.eci.dosw.service;
+package edu.eci.dosw.unitaria.service;
 
 import edu.eci.dosw.mapper.AccountMapper;
 import edu.eci.dosw.entity.AccountEntity;
@@ -9,6 +9,8 @@ import edu.eci.dosw.model.Permission;
 import edu.eci.dosw.model.Role;
 import edu.eci.dosw.repository.AccountRepository;
 import edu.eci.dosw.repository.RoleRepository;
+import edu.eci.dosw.service.RoleService;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import edu.eci.dosw.entity.RoleEntity;

@@ -1,4 +1,4 @@
-package edu.eci.dosw.service;
+package edu.eci.dosw.unitaria.service;
 
 import edu.eci.dosw.dto.AccountResponse;
 import edu.eci.dosw.dto.RegisterAccountRequest;
@@ -12,6 +12,8 @@ import edu.eci.dosw.model.AccountBuilder;
 import edu.eci.dosw.model.Role;
 import edu.eci.dosw.repository.AccountRepository;
 import edu.eci.dosw.repository.RoleRepository;
+import edu.eci.dosw.service.AccountService;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

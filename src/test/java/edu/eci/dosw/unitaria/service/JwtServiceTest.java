@@ -1,7 +1,9 @@
-package edu.eci.dosw.service;
+package edu.eci.dosw.unitaria.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import edu.eci.dosw.service.JwtService;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
