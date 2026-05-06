@@ -3,6 +3,8 @@ package edu.eci.dosw.unitaria.model;
 import edu.eci.dosw.entity.AccountStatus;
 import edu.eci.dosw.model.*;
 
+import edu.eci.dosw.exception.*;
+
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -84,7 +86,7 @@ class AccountBuilderTest {
                 .createdAt(LocalDateTime.now())
                 .addRole(new Role(1L, "PLAYER", List.of()));
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class, builder::build);
+        IllegalStateException ex = assertThrows(edu.eci.dosw.exception.InvalidAccountBuildException, builder::build);
         assertEquals("Email is required", ex.getMessage());
     }
 
@@ -96,7 +98,7 @@ class AccountBuilderTest {
                 .createdAt(LocalDateTime.now())
                 .addRole(new Role(1L, "PLAYER", List.of()));
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class, builder::build);
+        IllegalStateException ex = assertThrows(edu.eci.dosw.exception.InvalidAccountBuildException, builder::build);
         assertEquals("Email is required", ex.getMessage());
     }
 
@@ -107,7 +109,7 @@ class AccountBuilderTest {
                 .createdAt(LocalDateTime.now())
                 .addRole(new Role(1L, "PLAYER", List.of()));
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class, builder::build);
+        IllegalStateException ex = assertThrows(edu.eci.dosw.exception.InvalidAccountBuildException, builder::build);
         assertEquals("Password hash is required", ex.getMessage());
     }
 
@@ -119,7 +121,7 @@ class AccountBuilderTest {
                 .createdAt(LocalDateTime.now())
                 .addRole(new Role(1L, "PLAYER", List.of()));
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class, builder::build);
+        IllegalStateException ex = assertThrows(edu.eci.dosw.exception.InvalidAccountBuildException, builder::build);
         assertEquals("Password hash is required", ex.getMessage());
     }
 
@@ -130,7 +132,7 @@ class AccountBuilderTest {
                 .passwordHash("encoded-password")
                 .addRole(new Role(1L, "PLAYER", List.of()));
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class, builder::build);
+        IllegalStateException ex = assertThrows(edu.eci.dosw.exception.InvalidAccountBuildException, builder::build);
         assertEquals("CreatedAt is required", ex.getMessage());
     }
 
@@ -141,7 +143,7 @@ class AccountBuilderTest {
                 .passwordHash("encoded-password")
                 .createdAt(LocalDateTime.now());
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class, builder::build);
+        IllegalStateException ex = assertThrows(edu.eci.dosw.exception.InvalidAccountBuildException, builder::build);
         assertEquals("At least one role is required", ex.getMessage());
     }
 
@@ -153,7 +155,7 @@ class AccountBuilderTest {
                 .createdAt(LocalDateTime.now())
                 .addRole(null);
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class, builder::build);
+        IllegalStateException ex = assertThrows(edu.eci.dosw.exception.InvalidAccountBuildException, builder::build);
         assertEquals("At least one role is required", ex.getMessage());
     }
 
@@ -174,7 +176,7 @@ class AccountBuilderTest {
                 .createdAt(LocalDateTime.now())
                 .roles(null);
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class, builder::build);
+        IllegalStateException ex = assertThrows(edu.eci.dosw.exception.InvalidAccountBuildException, builder::build);
         assertEquals("At least one role is required", ex.getMessage());
     }
 }

@@ -131,7 +131,7 @@ class AccountServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> accountService.register(request));
 
-        assertEquals("Email already registered", ex.getMessage());
+        assertEquals("Email already registered: juan@escuelaing.edu.co", ex.getMessage());
 
         verify(accountRepository).findByEmail("juan@escuelaing.edu.co");
         verifyNoInteractions(roleRepository, roleMapper, accountMapper, passwordEncoder);
@@ -214,7 +214,7 @@ class AccountServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> accountService.register(request));
 
-        assertEquals("Role not found", ex.getMessage());
+        assertEquals("Role not found: PLAYER", ex.getMessage());
 
         verify(accountRepository).findByEmail("juan@escuelaing.edu.co");
         verify(roleRepository).findByNameIgnoreCase("PLAYER");
@@ -266,7 +266,7 @@ class AccountServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> accountService.findById(accountId));
 
-        assertEquals("Account not found", ex.getMessage());
+        assertEquals("Account not found with id: 999", ex.getMessage());
 
         verify(accountRepository).findById(accountId);
         verify(accountMapper, never()).toModel(any());

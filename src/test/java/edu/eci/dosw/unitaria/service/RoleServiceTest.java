@@ -106,7 +106,7 @@ class RoleServiceTest {
                 () -> roleService.assignRole(accountId, "PLAYER"));
 
         // Assert
-        assertEquals("Account not found", ex.getMessage());
+        assertEquals("Account not found with id: 1", ex.getMessage());
 
         verify(accountRepository).findById(accountId);
         verifyNoInteractions(roleRepository, roleMapper);
@@ -142,7 +142,7 @@ class RoleServiceTest {
                 () -> roleService.assignRole(accountId, roleName));
 
         // Assert
-        assertEquals("Role not found", ex.getMessage());
+        assertEquals("Role not found: PLAYER", ex.getMessage());
 
         verify(accountRepository).findById(accountId);
         verify(roleRepository).findByNameIgnoreCase(roleName);
@@ -423,7 +423,7 @@ class RoleServiceTest {
                 () -> roleService.getPermissions(roleId));
 
         // Assert
-        assertEquals("Role not found", ex.getMessage());
+        assertEquals("Role not found: id=999", ex.getMessage());
         verify(roleRepository).findById(roleId);
     }
 
@@ -440,7 +440,7 @@ class RoleServiceTest {
                 () -> roleService.getRolesByAccount(accountId));
 
         // Assert
-        assertEquals("Account not found", ex.getMessage());
+        assertEquals("Account not found with id: 999", ex.getMessage());
         verify(accountRepository).findById(accountId);
     }
 }

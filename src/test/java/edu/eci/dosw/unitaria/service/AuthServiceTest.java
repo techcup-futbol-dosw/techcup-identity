@@ -184,7 +184,7 @@ class AuthServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> authService.login(request));
 
-        assertEquals("Account not active", ex.getMessage());
+        assertEquals("Account is not active: null", ex.getMessage());
 
         verify(accountRepository).findByEmail("juan@escuelaing.edu.co");
         verify(accountMapper).toModel(accountEntity);
