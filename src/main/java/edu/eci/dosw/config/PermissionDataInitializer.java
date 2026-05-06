@@ -9,14 +9,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Configuration
 public class PermissionDataInitializer {
 
     private static final Logger log = LoggerFactory.getLogger(PermissionDataInitializer.class);
 
-    private static final List<String> PERMISSIONS = List.of(
+    private static final Set<String> PERMISSIONS = Stream.of(
             // 1) Identity / account / authentication
             "account:create:any",
             "account:read:self",
@@ -137,21 +142,33 @@ public class PermissionDataInitializer {
 
             // 19) Referee queries
             "referee-match:read:assigned"
-    );
+    ).collect(Collectors.toCollection(LinkedHashSet::new));
 
     @Bean
     @Order(1)
     CommandLineRunner permissionInitializer(PermissionRepository permissionRepository) {
         return args -> {
-            for (String permissionName : PERMISSIONS) {
-                boolean exists = permissionRepository.findByNameIgnoreCase(permissionName).isPresent();
+            Set<String> existingPermissionNames = permissionRepository.findAll().stream()
+                    .map(PermissionEntity::getName)
+                    .filter(name -> name != null && !name.isBlank())
+                    .map(name -> name.toLowerCase(Locale.ROOT))
+                    .collect(Collectors.toSet());
 
-                if (!exists) {
-                    PermissionEntity permission = new PermissionEntity();
-                    permission.setName(permissionName);
-                    permissionRepository.save(permission);
-                    log.info("Permission created: {}", permissionName);
-                }
+            List<PermissionEntity> missingPermissions = PERMISSIONS.stream()
+                    .map(name -> name.toLowerCase(Locale.ROOT))
+                    .filter(name -> !existingPermissionNames.contains(name))
+                    .map(name -> {
+                        PermissionEntity permission = new PermissionEntity();
+                        permission.setName(name);
+                        return permission;
+                    })
+                    .toList();
+
+            if (!missingPermissions.isEmpty()) {
+                permissionRepository.saveAll(missingPermissions);
+                missingPermissions.forEach(permission ->
+                        log.info("Permission created: {}", permission.getName())
+                );
             }
 
             log.info("Permission data initialization completed");
