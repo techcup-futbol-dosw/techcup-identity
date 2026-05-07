@@ -190,7 +190,9 @@ public class AuthService {
         tokenEntity.setToken(tokenValue);
         tokenEntity.setAccount(accountEntity);
         tokenEntity.setRevoked(false);
-
+        tokenEntity.setExpiresAt(
+                LocalDateTime.now().plus(jwtService.getRefreshTokenExpiration(), ChronoUnit.MILLIS)
+        );
         refreshTokenRepository.save(tokenEntity);
     }
 
