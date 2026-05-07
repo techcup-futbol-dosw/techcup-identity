@@ -24,7 +24,7 @@ public class AuthenticationEntryPointImpl implements AuthenticationEntryPoint {
         body.put("timestamp", LocalDateTime.now().toString());
         body.put("status", 401);
         body.put("error", "Unauthorized");
-        body.put("message", "Token inválido, expirado o ausente");
+        body.put("message", "Token invalido, expirado o ausente");
         body.put("path", request.getRequestURI());
 
         ObjectMapper mapper = new ObjectMapper();
