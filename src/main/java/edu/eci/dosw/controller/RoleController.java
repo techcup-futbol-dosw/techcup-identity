@@ -22,14 +22,14 @@ public class RoleController {
         this.roleService = roleService;
     }
 
-    @PreAuthorize("hasAuthority('role:assign')")
+    @PreAuthorize("hasAuthority('role:assign:any')")
     @PostMapping("/assign")
     public ResponseEntity<Void> assignRole(@Valid @RequestBody AssignRoleRequest request) {
         roleService.assignRole(request.getAccountId(), request.getRoleName());
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasAuthority('role:remove')")
+    @PreAuthorize("hasAuthority('role:remove:any')")
     @PostMapping("/remove")
     public ResponseEntity<Void> removeRole(@Valid @RequestBody RemoveRoleRequest request) {
         roleService.removeRole(request.getAccountId(), request.getRoleName());

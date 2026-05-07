@@ -51,8 +51,10 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/auth/login",
                                 "/auth/refresh",
-                                "accounts/register",
-                                "accounts/exists"
+                                "/auth/logout",
+                                "/auth/validate",
+                                "/accounts/register",
+                                "/accounts/exists"
                         ).permitAll()
                         .anyRequest().authenticated()
                 ).
