@@ -64,16 +64,15 @@ class GlobalExceptionHandlerTest {
     void handleNotFoundExceptions_ShouldReturnNotFound() {
 
         AccountNotFoundException exception =
-                new AccountNotFoundException("Account not found");
+                new AccountNotFoundException(1L);
 
         ResponseEntity<ApiErrorResponse> response =
                 handler.handleNotFoundExceptions(exception, request);
 
         assertEquals(404, response.getStatusCode().value());
         assertNotNull(response.getBody());
-
         assertEquals(
-                "Account not found",
+                "Account not found with id: 1",
                 response.getBody().getMessage()
         );
     }
@@ -82,7 +81,7 @@ class GlobalExceptionHandlerTest {
     void handleUnauthorizedExceptions_ShouldReturnUnauthorized() {
 
         InvalidCredentialsException exception =
-                new InvalidCredentialsException("Invalid credentials");
+                new InvalidCredentialsException();
 
         ResponseEntity<ApiErrorResponse> response =
                 handler.handleUnauthorizedExceptions(exception, request);
