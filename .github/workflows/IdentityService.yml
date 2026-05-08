@@ -89,3 +89,6 @@ jobs:
           resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
           containerAppName: techchup-identity
           imageToDeploy: ghcr.io/${{ github.repository_owner }}/techchup-identity:${{ github.sha }}
+          registryUrl: ghcr.io
+          registryUsername: ${{ github.actor }}
+          registryPassword: ${{ secrets.GITHUB_TOKEN }}
