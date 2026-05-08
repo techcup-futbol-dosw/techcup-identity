@@ -1,8 +1,9 @@
 package edu.eci.dosw.unitaria.exception;
 
+import edu.eci.dosw.exception.ApiErrorResponse;
 import org.junit.jupiter.api.Test;
 
-import edu.eci.dosw.exception.ApiErrorResponse;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -10,7 +11,9 @@ class ApiErrorResponseTest {
 
     @Test
     void defaultConstructor_ShouldCreateInstanceWithDefaultValues() {
+
         ApiErrorResponse response = new ApiErrorResponse();
+
         assertNull(response.getTimestamp());
         assertEquals(0, response.getStatus());
         assertNull(response.getError());
@@ -20,9 +23,20 @@ class ApiErrorResponseTest {
 
     @Test
     void parameterizedConstructor_ShouldSetAllFields() {
-        ApiErrorResponse response = new ApiErrorResponse("2026-01-01T00:00:00", 400, "Bad Request", "Invalid data", "/accounts/register");
 
-        assertEquals("2026-01-01T00:00:00", response.getTimestamp());
+        LocalDateTime timestamp =
+                LocalDateTime.of(2026, 1, 1, 0, 0);
+
+        ApiErrorResponse response =
+                new ApiErrorResponse(
+                        timestamp,
+                        400,
+                        "Bad Request",
+                        "Invalid data",
+                        "/accounts/register"
+                );
+
+        assertEquals(timestamp, response.getTimestamp());
         assertEquals(400, response.getStatus());
         assertEquals("Bad Request", response.getError());
         assertEquals("Invalid data", response.getMessage());
@@ -31,9 +45,17 @@ class ApiErrorResponseTest {
 
     @Test
     void of_ShouldCreateInstanceWithTimestampAndAllFields() {
-        ApiErrorResponse response = ApiErrorResponse.of(404, "Not Found", "Account not found", "/accounts/1");
+
+        ApiErrorResponse response =
+                ApiErrorResponse.of(
+                        404,
+                        "Not Found",
+                        "Account not found",
+                        "/accounts/1"
+                );
 
         assertNotNull(response.getTimestamp());
+
         assertEquals(404, response.getStatus());
         assertEquals("Not Found", response.getError());
         assertEquals("Account not found", response.getMessage());
@@ -42,14 +64,19 @@ class ApiErrorResponseTest {
 
     @Test
     void settersAndGetters_ShouldWorkCorrectly() {
+
+        LocalDateTime timestamp =
+                LocalDateTime.of(2026, 1, 1, 0, 0);
+
         ApiErrorResponse response = new ApiErrorResponse();
-        response.setTimestamp("2026-01-01T00:00:00");
+
+        response.setTimestamp(timestamp);
         response.setStatus(500);
         response.setError("Internal Server Error");
         response.setMessage("Unexpected error");
         response.setPath("/auth/login");
 
-        assertEquals("2026-01-01T00:00:00", response.getTimestamp());
+        assertEquals(timestamp, response.getTimestamp());
         assertEquals(500, response.getStatus());
         assertEquals("Internal Server Error", response.getError());
         assertEquals("Unexpected error", response.getMessage());
