@@ -109,6 +109,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(status).body(response);
     }
+    
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiErrorResponse> handleAccessDenied(
             AccessDeniedException ex,
@@ -119,21 +120,6 @@ public class GlobalExceptionHandler {
                 "Access denied",
                 request
         );
-    }
-
-    private ResponseEntity<ApiErrorResponse> buildErrorResponse(
-            HttpStatus status,
-            String message,
-            HttpServletRequest request
-    ) {
-        ApiErrorResponse response = ApiErrorResponse.of(
-                status.value(),
-                status.getReasonPhrase(),
-                message,
-                request.getRequestURI()
-        );
-
-        return ResponseEntity.status(status).body(response);
     }
 
 }
