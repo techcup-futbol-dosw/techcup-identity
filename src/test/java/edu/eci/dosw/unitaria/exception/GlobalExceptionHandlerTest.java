@@ -55,7 +55,7 @@ class GlobalExceptionHandlerTest {
         assertNotNull(response.getBody());
 
         assertEquals(
-                "Email exists",
+                "Email already registered: Email exists",
                 response.getBody().getMessage()
         );
     }
