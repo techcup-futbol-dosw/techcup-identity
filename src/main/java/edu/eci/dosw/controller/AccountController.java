@@ -31,7 +31,7 @@ public class AccountController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("hasAuthority('account:deactivate')")
+    @PreAuthorize("hasAuthority('account:deactivate:any')")
     @PatchMapping("/{accountId}/deactivate")
     public ResponseEntity<Void> deactivate(@PathVariable Long accountId) {
         accountService.deactivate(accountId);
