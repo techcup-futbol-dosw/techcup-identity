@@ -2,6 +2,7 @@ package edu.eci.dosw.config;
 
 
 import edu.eci.dosw.entity.RoleEntity;
+import edu.eci.dosw.exception.RoleNotFoundException;
 import edu.eci.dosw.mapper.AccountMapper;
 import edu.eci.dosw.model.Account;
 import edu.eci.dosw.model.AccountBuilder;
@@ -43,7 +44,7 @@ public class AdminDataInitializer {
             }
 
             RoleEntity adminRoleEntity = roleRepository.findByNameIgnoreCase("ADMIN")
-                    .orElseThrow(() -> new RuntimeException("ADMIN role not found"));
+                    .orElseThrow(() -> new RoleNotFoundException("ADMIN"));
 
             adminRoleEntity.setPermissions(permissionRepository.findAll());
             roleRepository.save(adminRoleEntity);
