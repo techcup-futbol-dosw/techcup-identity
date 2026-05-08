@@ -95,18 +95,6 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiErrorResponse> handleAccessDenied(
-            AccessDeniedException ex,
-            HttpServletRequest request
-    ) {
-        return buildErrorResponse(
-                HttpStatus.FORBIDDEN,
-                "Access denied",
-                request
-        );
-    }
-
     private ResponseEntity<ApiErrorResponse> buildErrorResponse(
             HttpStatus status,
             String message,
@@ -120,6 +108,18 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(status).body(response);
+    }
+    
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDenied(
+            AccessDeniedException ex,
+            HttpServletRequest request
+    ) {
+        return buildErrorResponse(
+                HttpStatus.FORBIDDEN,
+                "Access denied",
+                request
+        );
     }
 
 }
