@@ -1,173 +1,151 @@
 package edu.eci.dosw.unitaria.exception;
 
-import jakarta.servlet.http.HttpServletRequest;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-
 import edu.eci.dosw.exception.*;
+import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class GlobalExceptionHandlerTest {
 
-    @Mock
+    private GlobalExceptionHandler handler;
     private HttpServletRequest request;
 
-    @InjectMocks
-    private GlobalExceptionHandler handler;
+    @BeforeEach
+    void setUp() {
+        handler = new GlobalExceptionHandler();
+        request = mock(HttpServletRequest.class);
 
-    @Test
-    void handleInvalidRegistrationData_ShouldReturn400() {
-        when(request.getRequestURI()).thenReturn("/accounts/register");
-        InvalidRegistrationDataException ex = new InvalidRegistrationDataException("Invalid data");
-
-        ResponseEntity<ApiErrorResponse> result = handler.handleInvalidRegistrationData(ex, request);
-
-        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
-        assertEquals("Invalid data", result.getBody().getMessage());
-        assertEquals("/accounts/register", result.getBody().getPath());
+        when(request.getRequestURI())
+                .thenReturn("/test");
     }
 
     @Test
-    void handleInvalidEmailForRelation_ShouldReturn400() {
-        when(request.getRequestURI()).thenReturn("/accounts/register");
-        InvalidEmailForRelationException ex = new InvalidEmailForRelationException("Invalid email");
+    void handleBadRequestExceptions_ShouldReturnBadRequest() {
 
-        ResponseEntity<ApiErrorResponse> result = handler.handleInvalidEmailForRelation(ex, request);
+        InvalidRegistrationDataException exception =
+                new InvalidRegistrationDataException("Invalid data");
 
-        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
-        assertEquals("Invalid email", result.getBody().getMessage());
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleBadRequestExceptions(exception, request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+
+        assertEquals(
+                "Invalid data",
+                response.getBody().getMessage()
+        );
     }
 
     @Test
-    void handleMissingRequiredField_ShouldReturn400() {
-        when(request.getRequestURI()).thenReturn("/accounts/register");
-        MissingRequiredFieldException ex = new MissingRequiredFieldException("email");
+    void handleConflictExceptions_ShouldReturnConflict() {
 
-        ResponseEntity<ApiErrorResponse> result = handler.handleMissingRequiredField(ex, request);
+        EmailAlreadyRegisteredException exception =
+                new EmailAlreadyRegisteredException("Email exists");
 
-        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
-        assertEquals("email is required", result.getBody().getMessage());
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleConflictExceptions(exception, request);
+
+        assertEquals(409, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+
+        assertEquals(
+                "Email exists",
+                response.getBody().getMessage()
+        );
     }
 
     @Test
-    void handleEmailAlreadyRegistered_ShouldReturn409() {
-        when(request.getRequestURI()).thenReturn("/accounts/register");
-        EmailAlreadyRegisteredException ex = new EmailAlreadyRegisteredException("juan@escuelaing.edu.co");
+    void handleNotFoundExceptions_ShouldReturnNotFound() {
 
-        ResponseEntity<ApiErrorResponse> result = handler.handleEmailAlreadyRegistered(ex, request);
+        AccountNotFoundException exception =
+                new AccountNotFoundException("Account not found");
 
-        assertEquals(HttpStatus.CONFLICT, result.getStatusCode());
-        assertEquals("Email already registered: juan@escuelaing.edu.co", result.getBody().getMessage());
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleNotFoundExceptions(exception, request);
+
+        assertEquals(404, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+
+        assertEquals(
+                "Account not found",
+                response.getBody().getMessage()
+        );
     }
 
     @Test
-    void handleAccountNotFound_ShouldReturn404() {
-        when(request.getRequestURI()).thenReturn("/accounts/1");
-        AccountNotFoundException ex = new AccountNotFoundException(1L);
+    void handleUnauthorizedExceptions_ShouldReturnUnauthorized() {
 
-        ResponseEntity<ApiErrorResponse> result = handler.handleAccountNotFound(ex, request);
+        InvalidCredentialsException exception =
+                new InvalidCredentialsException("Invalid credentials");
 
-        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleUnauthorizedExceptions(exception, request);
+
+        assertEquals(401, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+
+        assertEquals(
+                "Invalid credentials",
+                response.getBody().getMessage()
+        );
     }
 
     @Test
-    void handleRoleNotFound_ShouldReturn404() {
-        when(request.getRequestURI()).thenReturn("/roles/1");
-        RoleNotFoundException ex = new RoleNotFoundException("PLAYER");
+    void handleDataIntegrityViolation_ShouldReturnConflict() {
 
-        ResponseEntity<ApiErrorResponse> result = handler.handleRoleNotFound(ex, request);
+        DataIntegrityViolationException exception =
+                new DataIntegrityViolationException("DB error");
 
-        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleDataIntegrityViolation(exception, request);
+
+        assertEquals(409, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+
+        assertEquals(
+                "Database integrity violation",
+                response.getBody().getMessage()
+        );
     }
 
     @Test
-    void handleInvalidCredentials_ShouldReturn401() {
-        when(request.getRequestURI()).thenReturn("/auth/login");
-        InvalidCredentialsException ex = new InvalidCredentialsException();
+    void handleBusinessException_ShouldReturnBadRequest() {
 
-        ResponseEntity<ApiErrorResponse> result = handler.handleInvalidCredentials(ex, request);
+        BusinessException exception =
+                new BusinessException("Business error");
 
-        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleBusinessException(exception, request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+
+        assertEquals(
+                "Business error",
+                response.getBody().getMessage()
+        );
     }
 
     @Test
-    void handleInvalidRefreshToken_ShouldReturn401() {
-        when(request.getRequestURI()).thenReturn("/auth/refresh");
-        InvalidRefreshTokenException ex = new InvalidRefreshTokenException();
+    void handleGenericException_ShouldReturnInternalServerError() {
 
-        ResponseEntity<ApiErrorResponse> result = handler.handleInvalidRefreshToken(ex, request);
+        Exception exception = new Exception("Unexpected");
 
-        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
-    }
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleGenericException(exception, request);
 
-    @Test
-    void handleRefreshTokenNotFound_ShouldReturn401() {
-        when(request.getRequestURI()).thenReturn("/auth/refresh");
-        RefreshTokenNotFoundException ex = new RefreshTokenNotFoundException();
+        assertEquals(500, response.getStatusCode().value());
+        assertNotNull(response.getBody());
 
-        ResponseEntity<ApiErrorResponse> result = handler.handleRefreshTokenNotFound(ex, request);
-
-        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
-    }
-
-    @Test
-    void handleRefreshTokenRevoked_ShouldReturn401() {
-        when(request.getRequestURI()).thenReturn("/auth/logout");
-        RefreshTokenRevokedException ex = new RefreshTokenRevokedException();
-
-        ResponseEntity<ApiErrorResponse> result = handler.handleRefreshTokenRevoked(ex, request);
-
-        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
-    }
-
-    @Test
-    void handleAccountNotActive_ShouldReturn401() {
-        when(request.getRequestURI()).thenReturn("/auth/login");
-        AccountNotActiveException ex = new AccountNotActiveException(1L);
-
-        ResponseEntity<ApiErrorResponse> result = handler.handleAccountNotActive(ex, request);
-
-        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
-    }
-
-    @Test
-    void handleBusinessException_ShouldReturn400() {
-        when(request.getRequestURI()).thenReturn("/accounts/register");
-        BusinessException ex = new BusinessException("Business error");
-
-        ResponseEntity<ApiErrorResponse> result = handler.handleBusinessException(ex, request);
-
-        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
-        assertEquals("Business error", result.getBody().getMessage());
-    }
-
-    @Test
-    void handleGenericException_ShouldReturn500() {
-        when(request.getRequestURI()).thenReturn("/accounts/register");
-        Exception ex = new Exception("Unexpected error");
-
-        ResponseEntity<ApiErrorResponse> result = handler.handleGenericException(ex, request);
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
-        assertEquals("An unexpected error occurred", result.getBody().getMessage());
-    }
-
-    @Test
-    void handleInvalidAccountBuild_ShouldReturn400() {
-        when(request.getRequestURI()).thenReturn("/accounts/register");
-        InvalidAccountBuildException ex = new InvalidAccountBuildException("Email is required");
-
-        ResponseEntity<ApiErrorResponse> result = handler.handleInvalidAccountBuild(ex, request);
-
-        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
-        assertEquals("Email is required", result.getBody().getMessage());
+        assertEquals(
+                "An unexpected error occurred",
+                response.getBody().getMessage()
+        );
     }
 }
