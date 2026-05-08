@@ -270,7 +270,7 @@ class AuthServiceTest {
                 () -> authService.refreshToken(request)
         );
 
-        assertEquals("Refresh token revoked or invalid", ex.getMessage());
+        assertEquals("Refresh token revoked", ex.getMessage());
     }
 
     @Test
