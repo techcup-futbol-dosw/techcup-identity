@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 
 @Service
@@ -129,6 +130,7 @@ public class JwtService {
         return Jwts.builder()
                 .claims(extraClaims)
                 .subject(subject)
+                .id(UUID.randomUUID().toString())
                 .issuedAt(now)
                 .expiration(expirationDate)
                 .signWith(secretKey)
