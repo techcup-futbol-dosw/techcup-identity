@@ -150,60 +150,41 @@ public class AccountBuilder {
     }
 
     private void validateRequiredFields() {
-        if (name == null || name.isBlank()) {
-            throw new InvalidAccountBuildException("Name is required");
-        }
+        requireNotBlank(name, "Name is required");
+        requireNotBlank(lastName, "Last name is required");
+        requireNotNull(birthDate, "Birth date is required");
+        requireNotNull(relation, "Relation is required");
+        requireNotNull(semester, "Semester is required");
+        requireNotBlank(program, "Program is required");
+        requireNotBlank(email, "Email is required");
+        requireNotBlank(passwordHash, "Password hash is required");
+        requireNotNull(createdAt, "CreatedAt is required");
+        requireNotNull(gender, "Gender is required");
+        requireNotNull(identificationType, "Identification type is required");
+        requireNotBlank(identification, "Identification is required");
+        requireNotEmpty(roles, "At least one role is required");
+    }
 
-        if (lastName == null || lastName.isBlank()) {
-            throw new InvalidAccountBuildException("Last name is required");
-        }
-
-        if (birthDate == null) {
-            throw new InvalidAccountBuildException("Birth date is required");
-        }
-
-        if (relation == null) {
-            throw new InvalidAccountBuildException("Relation is required");
-        }
-
-        if (semester == null) {
-            throw new InvalidAccountBuildException("Semester is required");
-        }
-
-        if (program == null || program.isBlank()) {
-            throw new InvalidAccountBuildException("Program is required");
-        }
-
-        if (email == null || email.isBlank()) {
-            throw new InvalidAccountBuildException("Email is required");
-        }
-
-        if (passwordHash == null || passwordHash.isBlank()) {
-            throw new InvalidAccountBuildException("Password hash is required");
-        }
-
-        if (createdAt == null) {
-            throw new InvalidAccountBuildException("CreatedAt is required");
-        }
-
-        if (gender == null) {
-            throw new InvalidAccountBuildException("Gender is required");
-        }
-
-        if (identificationType == null) {
-            throw new InvalidAccountBuildException("Identification type is required");
-        }
-
-        if (identification == null || identification.isBlank()) {
-            throw new InvalidAccountBuildException("Identification is required");
-        }
-
-        if (roles == null || roles.isEmpty()) {
-            throw new InvalidAccountBuildException("At least one role is required");
+    private void requireNotBlank(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new InvalidAccountBuildException(message);
         }
     }
 
-    private void setDefaultFields() {
+    private void requireNotNull(Object value, String message) {
+        if (value == null) {
+            throw new InvalidAccountBuildException(message);
+        }
+    }
+
+
+    private void requireNotEmpty(List<?> value, String message) {
+        if (value == null || value.isEmpty()) {
+            throw new InvalidAccountBuildException(message);
+        }
+    }
+
+            private void setDefaultFields() {
         if (status == null) {
             status = AccountStatus.ACTIVE;
         }
