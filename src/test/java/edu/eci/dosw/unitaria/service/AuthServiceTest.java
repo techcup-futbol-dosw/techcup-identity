@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static edu.eci.dosw.testutil.TestDataFactory.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -58,50 +59,14 @@ class AuthServiceTest {
     }
 
     private Account buildAccount(AccountStatus status) {
-        Role role = new Role();
-        role.setId(1L);
-        role.setName("PLAYER");
-
-        return new AccountBuilder()
-                .id(1L)
-                .name("Juan")
-                .lastName("Roa")
-                .birthDate(LocalDate.of(2000, 5, 15))
-                .relation(Relation.ESTUDIANTE)
-                .semester(7)
-                .program("SISTEMAS")
-                .email("juan@escuelaing.edu.co")
-                .passwordHash("encoded-password")
+        return validAccountBuilder("juan@escuelaing.edu.co")
                 .status(status)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .gender(Gender.MALE)
-                .identificationType(IdentificationType.CC)
-                .identification("AUTH-SERVICE-123")
-                .addRole(role)
+                .addRole(playerRole())
                 .build();
     }
 
     private AccountEntity buildAccountEntity() {
-        AccountEntity entity = new AccountEntity();
-
-        entity.setId(1L);
-        entity.setName("Juan");
-        entity.setLastName("Roa");
-        entity.setBirthDate(LocalDate.of(2000, 5, 15));
-        entity.setRelation(Relation.ESTUDIANTE);
-        entity.setSemester(7);
-        entity.setProgram("SISTEMAS");
-        entity.setEmail("juan@escuelaing.edu.co");
-        entity.setPasswordHash("encoded-password");
-        entity.setStatus(AccountStatus.ACTIVE);
-        entity.setCreatedAt(LocalDateTime.now());
-        entity.setUpdatedAt(LocalDateTime.now());
-        entity.setGender(Gender.MALE);
-        entity.setIdentificationType(IdentificationType.CC);
-        entity.setIdentification("AUTH-SERVICE-123");
-
-        return entity;
+        return validAccountEntity("juan@escuelaing.edu.co");
     }
 
     @Test

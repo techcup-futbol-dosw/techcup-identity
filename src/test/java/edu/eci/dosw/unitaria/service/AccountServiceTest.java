@@ -33,8 +33,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
+import static edu.eci.dosw.testutil.TestDataFactory.validAccount;
+import static edu.eci.dosw.testutil.TestDataFactory.validRegisterRequest;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -316,42 +320,15 @@ class AccountServiceTest {
     }
 
     private RegisterAccountRequest createValidRegisterRequest(String email) {
-        RegisterAccountRequest request = new RegisterAccountRequest();
-
-        request.setEmail(email);
-        request.setPassword("Password123*");
-        request.setRelation(Relation.ESTUDIANTE);
-        request.setProgram(Program.SISTEMAS);
-        request.setSemester(3);
-
-        request.setName("Juan");
-        request.setLastName("Roa");
-        request.setBirthDate(LocalDate.of(2000, 5, 15));
-        request.setGender(Gender.MALE);
-        request.setIdentificationType(IdentificationType.CC);
-        request.setIdentification("123456789");
-
-        return request;
+        return validRegisterRequest(email);
     }
 
     private Account createValidAccount(String email, String passwordHash, Role role) {
-        return new AccountBuilder()
-                .id(1L)
-                .name("Juan")
-                .lastName("Roa")
-                .birthDate(LocalDate.of(2000, 5, 15))
-                .relation(Relation.ESTUDIANTE)
-                .semester(3)
-                .program("SISTEMAS")
-                .email(email)
-                .passwordHash(passwordHash)
-                .status(AccountStatus.ACTIVE)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .gender(Gender.MALE)
-                .identificationType(IdentificationType.CC)
-                .identification("123456789")
-                .addRole(role)
-                .build();
+        Account account = validAccount(email);
+        List<Role> roles = new ArrayList<>();
+        roles.add(role);
+        account.setPasswordHash(passwordHash);
+        account.setRoles(roles);
+        return account;
     }
 }

@@ -1,5 +1,6 @@
 package edu.eci.dosw.testutil;
 
+import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.model.Program;
 import edu.eci.dosw.dto.RegisterAccountRequest;
 import edu.eci.dosw.model.Relation;
@@ -89,5 +90,26 @@ public final class TestDataFactory {
 
     public static String uniqueIdentification(String seed) {
         return "ID-" + Math.abs(seed.hashCode());
+    }
+    public static AccountEntity validAccountEntity(String email) {
+        AccountEntity entity = new AccountEntity();
+
+        entity.setId(1L);
+        entity.setName("Juan");
+        entity.setLastName("Roa");
+        entity.setBirthDate(LocalDate.of(2000, 5, 15));
+        entity.setRelation(Relation.ESTUDIANTE);
+        entity.setSemester(7);
+        entity.setProgram("SISTEMAS");
+        entity.setEmail(email);
+        entity.setPasswordHash("encoded-password");
+        entity.setStatus(AccountStatus.ACTIVE);
+        entity.setCreatedAt(LocalDateTime.now());
+        entity.setUpdatedAt(LocalDateTime.now());
+        entity.setGender(Gender.MALE);
+        entity.setIdentificationType(IdentificationType.CC);
+        entity.setIdentification(uniqueIdentification(email));
+
+        return entity;
     }
 }

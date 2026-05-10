@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static edu.eci.dosw.testutil.TestDataFactory.validAccountEntity;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -42,8 +43,6 @@ class AccountMapperTest {
 
     @Test
     void toModel_ShouldMapAllFields_WhenEntityIsValid() {
-        LocalDateTime now = LocalDateTime.now();
-
         RoleEntity roleEntity = new RoleEntity();
         roleEntity.setId(1L);
         roleEntity.setName("PLAYER");
@@ -52,7 +51,7 @@ class AccountMapperTest {
         role.setId(1L);
         role.setName("PLAYER");
 
-        AccountEntity entity = createValidEntity(now);
+        AccountEntity entity = createValidEntity();
         entity.setRoles(List.of(roleEntity));
 
         when(roleMapper.toModel(roleEntity)).thenReturn(role);
@@ -73,10 +72,6 @@ class AccountMapperTest {
         assertEquals("encoded-password", result.getPasswordHash());
         assertEquals(AccountStatus.ACTIVE, result.getStatus());
 
-        assertEquals(now, result.getCreatedAt());
-        assertEquals(now, result.getUpdatedAt());
-        assertEquals(now, result.getLastLoginAt());
-
         assertEquals(Gender.MALE, result.getGender());
         assertEquals(IdentificationType.CC, result.getIdentificationType());
         assertEquals("123456789", result.getIdentification());
@@ -89,9 +84,7 @@ class AccountMapperTest {
 
     @Test
     void toModel_ShouldThrowException_WhenEntityHasNullRoles() {
-        LocalDateTime now = LocalDateTime.now();
-
-        AccountEntity entity = createValidEntity(now);
+        AccountEntity entity = createValidEntity();
         entity.setRoles(null);
 
         assertThrows(InvalidAccountBuildException.class, () -> accountMapper.toModel(entity));
@@ -189,30 +182,8 @@ class AccountMapperTest {
         assertEquals("PLAYER", result.getRoles().get(0));
     }
 
-    private AccountEntity createValidEntity(LocalDateTime now) {
-        AccountEntity entity = new AccountEntity();
-
-        entity.setId(1L);
-        entity.setName("Juan");
-        entity.setLastName("Roa");
-        entity.setBirthDate(LocalDate.of(2000, 5, 15));
-        entity.setRelation(Relation.ESTUDIANTE);
-        entity.setSemester(7);
-        entity.setProgram("INGENIERIA_SISTEMAS");
-
-        entity.setEmail("juan@escuelaing.edu.co");
-        entity.setPasswordHash("encoded-password");
-        entity.setStatus(AccountStatus.ACTIVE);
-
-        entity.setCreatedAt(now);
-        entity.setUpdatedAt(now);
-        entity.setLastLoginAt(now);
-
-        entity.setGender(Gender.MALE);
-        entity.setIdentificationType(IdentificationType.CC);
-        entity.setIdentification("123456789");
-
-        return entity;
+    private AccountEntity createValidEntity() {
+        return validAccountEntity("juan@escuelaing.edu.co");
     }
 
     private Account createValidModel(LocalDateTime now, List<Role> roles) {

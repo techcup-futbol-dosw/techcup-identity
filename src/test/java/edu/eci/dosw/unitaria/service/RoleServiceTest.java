@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static edu.eci.dosw.testutil.TestDataFactory.validAccount;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -413,27 +414,6 @@ class RoleServiceTest {
     }
 
     private Account buildValidAccount(Role... roles) {
-        AccountBuilder builder = new AccountBuilder()
-                .id(1L)
-                .name("Juan")
-                .lastName("Roa")
-                .birthDate(LocalDate.of(2000, 5, 15))
-                .relation(Relation.ESTUDIANTE)
-                .semester(7)
-                .program("SISTEMAS")
-                .email("juan@escuelaing.edu.co")
-                .passwordHash("encoded-password")
-                .status(AccountStatus.ACTIVE)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .gender(Gender.MALE)
-                .identificationType(IdentificationType.CC)
-                .identification("ROLE-SERVICE-123");
-
-        for (Role role : roles) {
-            builder.addRole(role);
-        }
-
-        return builder.build();
+        return validAccount("juan@escuelaing.edu.co", roles);
     }
 }
