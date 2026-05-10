@@ -30,7 +30,6 @@ import edu.eci.dosw.dto.TokenValidationRequest;
 import edu.eci.dosw.dto.TokenValidationResponse;
 import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.entity.RefreshTokenEntity;
-import edu.eci.dosw.mapper.AccountMapper;
 import edu.eci.dosw.model.Account;
 import edu.eci.dosw.model.AccountStatus;
 
