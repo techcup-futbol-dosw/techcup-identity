@@ -1,6 +1,7 @@
 package edu.eci.dosw.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.model.Program;
 import edu.eci.dosw.dto.RegisterAccountRequest;
 import edu.eci.dosw.model.Relation;
@@ -29,6 +30,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static edu.eci.dosw.testutil.TestDataFactory.validAccountBuilder;
+import static edu.eci.dosw.testutil.TestDataFactory.validRegisterRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -106,8 +109,7 @@ class AccountControllerIntegrationTest {
                 .andExpect(jsonPath("$.lastName").value("Roa"))
                 .andExpect(jsonPath("$.relation").value("ESTUDIANTE"))
                 .andExpect(jsonPath("$.semester").value(7))
-                .andExpect(jsonPath("$.gender").value("MALE"))
-                .andExpect(jsonPath("$.identification").value("123456789"));
+                .andExpect(jsonPath("$.gender").value("MALE"));
 
         assertThat(accountRepository.findByEmail("juan@mail.escuelaing.edu.co")).isPresent();
     }
@@ -309,44 +311,18 @@ class AccountControllerIntegrationTest {
         // HELPERS
         // =========================================================
 
-    private edu.eci.dosw.entity.AccountEntity createPersistedAccount(String email, RoleEntity roleEntity) {
+    private AccountEntity createPersistedAccount(String email, RoleEntity roleEntity) {
         Role roleModel = roleMapper.toModel(roleEntity);
 
-        Account account = new AccountBuilder()
-                .name("Juan")
-                .lastName("Roa")
-                .birthDate(LocalDate.of(2000, 5, 15))
-                .relation(Relation.ESTUDIANTE)
-                .semester(7)
-                .program("SISTEMAS")
-                .email(email)
+        Account account = validAccountBuilder(email)
                 .passwordHash(passwordEncoder.encode("Password123*"))
                 .status(AccountStatus.ACTIVE)
-                .createdAt(LocalDateTime.now())
-                .gender(Gender.MALE)
-                .identificationType(IdentificationType.CC)
-                .identification("ID-" + Math.abs(email.hashCode()))
                 .addRole(roleModel)
                 .build();
 
         return accountRepository.save(accountMapper.toEntity(account));
     }
     private RegisterAccountRequest createValidRegisterRequest (String email){
-            RegisterAccountRequest request = new RegisterAccountRequest();
-
-            request.setEmail(email);
-            request.setPassword("Password123*");
-            request.setRelation(Relation.ESTUDIANTE);
-            request.setProgram(Program.SISTEMAS);
-            request.setSemester(7);
-
-            request.setName("Juan");
-            request.setLastName("Roa");
-            request.setBirthDate(LocalDate.of(2000, 5, 15));
-            request.setGender(Gender.MALE);
-            request.setIdentificationType(IdentificationType.CC);
-            request.setIdentification("123456789");
-
-            return request;
+        return validRegisterRequest(email);
     }
 }

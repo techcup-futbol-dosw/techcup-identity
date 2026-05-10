@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static edu.eci.dosw.testutil.TestDataFactory.validAccountBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -290,23 +291,9 @@ class AuthControllerIntegrationTest {
                                                  RoleEntity roleEntity) {
         Role roleModel = roleMapper.toModel(roleEntity);
 
-        LocalDateTime now = LocalDateTime.now();
-
-        Account account = new AccountBuilder()
-                .name("Juan")
-                .lastName("Roa")
-                .birthDate(LocalDate.of(2000, 5, 15))
-                .relation(Relation.ESTUDIANTE)
-                .semester(7)
-                .program("SISTEMAS")
-                .email(email)
+        Account account = validAccountBuilder(email)
                 .passwordHash(passwordEncoder.encode(rawPassword))
                 .status(status)
-                .createdAt(now)
-                .updatedAt(now)
-                .gender(Gender.MALE)
-                .identificationType(IdentificationType.CC)
-                .identification("AUTH-" + Math.abs(email.hashCode()))
                 .addRole(roleModel)
                 .build();
 

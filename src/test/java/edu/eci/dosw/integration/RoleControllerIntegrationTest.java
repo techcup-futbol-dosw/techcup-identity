@@ -33,6 +33,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static edu.eci.dosw.testutil.TestDataFactory.validAccountBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -325,20 +326,9 @@ class RoleControllerIntegrationTest {
                                                  String rawPassword,
                                                  AccountStatus status,
                                                  RoleEntity... roleEntities) {
-        AccountBuilder builder = new AccountBuilder()
-                .name("Juan")
-                .lastName("Roa")
-                .birthDate(LocalDate.of(2000, 5, 15))
-                .relation(Relation.ESTUDIANTE)
-                .semester(7)
-                .program("SISTEMAS")
-                .email(email)
+        AccountBuilder builder = validAccountBuilder(email)
                 .passwordHash(passwordEncoder.encode(rawPassword))
-                .status(status)
-                .createdAt(LocalDateTime.now())
-                .gender(Gender.MALE)
-                .identificationType(IdentificationType.CC)
-                .identification("ROLE-" + Math.abs(email.hashCode()));
+                .status(status);
 
         for (RoleEntity roleEntity : roleEntities) {
             Role roleModel = roleMapper.toModel(roleEntity);
