@@ -83,6 +83,26 @@ class AccountResponseTest {
         LocalDate birthDate = LocalDate.of(1999, 8, 20);
         List<String> roles = List.of("ADMIN");
 
+        AccountResponse response = getAccountResponse(createdAt, roles, birthDate);
+
+        assertEquals(1L, response.getId());
+        assertEquals("juan@escuelaing.edu.co", response.getEmail());
+        assertEquals(AccountStatus.INACTIVE, response.getStatus());
+        assertEquals(createdAt, response.getCreatedAt());
+        assertEquals(roles, response.getRoles());
+
+        assertEquals("Juan", response.getName());
+        assertEquals("Roa", response.getLastName());
+        assertEquals(birthDate, response.getBirthDate());
+        assertEquals(Relation.ESTUDIANTE, response.getRelation());
+        assertEquals(8, response.getSemester());
+        assertEquals("INGENIERIA_SISTEMAS", response.getProgram());
+        assertEquals(Gender.MALE, response.getGender());
+        assertEquals(IdentificationType.CC, response.getIdentificationType());
+        assertEquals("987654321", response.getIdentification());
+    }
+
+    private static AccountResponse getAccountResponse(LocalDateTime createdAt, List<String> roles, LocalDate birthDate) {
         AccountResponse response = new AccountResponse();
 
         response.setId(1L);
@@ -100,21 +120,6 @@ class AccountResponseTest {
         response.setGender(Gender.MALE);
         response.setIdentificationType(IdentificationType.CC);
         response.setIdentification("987654321");
-
-        assertEquals(1L, response.getId());
-        assertEquals("juan@escuelaing.edu.co", response.getEmail());
-        assertEquals(AccountStatus.INACTIVE, response.getStatus());
-        assertEquals(createdAt, response.getCreatedAt());
-        assertEquals(roles, response.getRoles());
-
-        assertEquals("Juan", response.getName());
-        assertEquals("Roa", response.getLastName());
-        assertEquals(birthDate, response.getBirthDate());
-        assertEquals(Relation.ESTUDIANTE, response.getRelation());
-        assertEquals(8, response.getSemester());
-        assertEquals("INGENIERIA_SISTEMAS", response.getProgram());
-        assertEquals(Gender.MALE, response.getGender());
-        assertEquals(IdentificationType.CC, response.getIdentificationType());
-        assertEquals("987654321", response.getIdentification());
+        return response;
     }
 }

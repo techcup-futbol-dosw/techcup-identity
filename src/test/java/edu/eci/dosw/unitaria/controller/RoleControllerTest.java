@@ -22,6 +22,19 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class RoleControllerTest {
 
+    private static final Long ACCOUNT_ID = 1L;
+
+    private static final String ACCOUNT_NOT_FOUND = "Account not found";
+    private static final String ROLE_NOT_FOUND = "Role not found";
+    private static final Long MISSING_ACCOUNT_ID = 999L;
+    private static final Long ROLE_ID = 1L;
+    private static final String TOURNAMENT_READ = "tournament:read";
+
+    private static final String ADMIN = "ADMIN";
+    private static final String PLAYER = "PLAYER";
+    private static final String NONEXISTENT = "NONEXISTENT";
+
+
     @Mock
     private RoleService roleService;
 
@@ -30,153 +43,219 @@ class RoleControllerTest {
 
     @Test
     void assignRole_ShouldReturnNoContent_WhenRequestIsValid() {
-        AssignRoleRequest request = new AssignRoleRequest();
-        request.setAccountId(1L);
-        request.setRoleName("ADMIN");
+        AssignRoleRequest request = assignRoleRequest(ACCOUNT_ID, ADMIN);
 
-        doNothing().when(roleService).assignRole(1L, "ADMIN");
+        doNothing().when(roleService).assignRole(ACCOUNT_ID, ADMIN);
 
         ResponseEntity<Void> result = roleController.assignRole(request);
 
-        assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
-        assertNull(result.getBody());
-        verify(roleService).assignRole(1L, "ADMIN");
+        assertNoContent(result);
+        verify(roleService).assignRole(ACCOUNT_ID, ADMIN);
     }
 
     @Test
     void assignRole_ShouldThrowException_WhenAccountDoesNotExist() {
-        AssignRoleRequest request = new AssignRoleRequest();
-        request.setAccountId(999L);
-        request.setRoleName("ADMIN");
+        AssignRoleRequest request = assignRoleRequest(MISSING_ACCOUNT_ID, ADMIN);
 
-        doThrow(new RuntimeException("Account not found")).when(roleService).assignRole(999L, "ADMIN");
+        doThrow(new RuntimeException(ACCOUNT_NOT_FOUND))
+                .when(roleService)
+                .assignRole(MISSING_ACCOUNT_ID, ADMIN);
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> roleController.assignRole(request));
-        assertEquals("Account not found", ex.getMessage());
-        verify(roleService).assignRole(999L, "ADMIN");
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> roleController.assignRole(request)
+        );
+
+        assertEquals(ACCOUNT_NOT_FOUND, ex.getMessage());
+        verify(roleService).assignRole(MISSING_ACCOUNT_ID, ADMIN);
     }
 
     @Test
     void assignRole_ShouldThrowException_WhenRoleDoesNotExist() {
-        AssignRoleRequest request = new AssignRoleRequest();
-        request.setAccountId(1L);
-        request.setRoleName("NONEXISTENT");
+        AssignRoleRequest request = assignRoleRequest(ACCOUNT_ID, NONEXISTENT);
 
-        doThrow(new RuntimeException("Role not found")).when(roleService).assignRole(1L, "NONEXISTENT");
+        doThrow(new RuntimeException(ROLE_NOT_FOUND))
+                .when(roleService)
+                .assignRole(ACCOUNT_ID, NONEXISTENT);
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> roleController.assignRole(request));
-        assertEquals("Role not found", ex.getMessage());
-        verify(roleService).assignRole(1L, "NONEXISTENT");
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> roleController.assignRole(request)
+        );
+
+        assertEquals(ROLE_NOT_FOUND, ex.getMessage());
+        verify(roleService).assignRole(ACCOUNT_ID, NONEXISTENT);
     }
 
     @Test
     void removeRole_ShouldReturnNoContent_WhenRequestIsValid() {
-        RemoveRoleRequest request = new RemoveRoleRequest();
-        request.setAccountId(1L);
-        request.setRoleName("ADMIN");
+        RemoveRoleRequest request = removeRoleRequest(ACCOUNT_ID, ADMIN);
 
-        doNothing().when(roleService).removeRole(1L, "ADMIN");
+        doNothing().when(roleService).removeRole(ACCOUNT_ID, ADMIN);
 
         ResponseEntity<Void> result = roleController.removeRole(request);
 
-        assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
-        assertNull(result.getBody());
-        verify(roleService).removeRole(1L, "ADMIN");
+        assertNoContent(result);
+        verify(roleService).removeRole(ACCOUNT_ID, ADMIN);
     }
 
     @Test
     void removeRole_ShouldThrowException_WhenAccountDoesNotExist() {
-        RemoveRoleRequest request = new RemoveRoleRequest();
-        request.setAccountId(999L);
-        request.setRoleName("ADMIN");
+        RemoveRoleRequest request = removeRoleRequest(MISSING_ACCOUNT_ID, ADMIN);
 
-        doThrow(new RuntimeException("Account not found")).when(roleService).removeRole(999L, "ADMIN");
+        doThrow(new RuntimeException(ACCOUNT_NOT_FOUND))
+                .when(roleService)
+                .removeRole(MISSING_ACCOUNT_ID, ADMIN);
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> roleController.removeRole(request));
-        assertEquals("Account not found", ex.getMessage());
-        verify(roleService).removeRole(999L, "ADMIN");
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> roleController.removeRole(request)
+        );
+
+        assertEquals(ACCOUNT_NOT_FOUND, ex.getMessage());
+        verify(roleService).removeRole(MISSING_ACCOUNT_ID, ADMIN);
     }
 
     @Test
     void removeRole_ShouldThrowException_WhenRoleDoesNotExist() {
-        RemoveRoleRequest request = new RemoveRoleRequest();
-        request.setAccountId(1L);
-        request.setRoleName("NONEXISTENT");
+        RemoveRoleRequest request = removeRoleRequest(ACCOUNT_ID, NONEXISTENT);
 
-        doThrow(new RuntimeException("Role not found")).when(roleService).removeRole(1L, "NONEXISTENT");
+        doThrow(new RuntimeException(ROLE_NOT_FOUND))
+                .when(roleService)
+                .removeRole(ACCOUNT_ID, NONEXISTENT);
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> roleController.removeRole(request));
-        assertEquals("Role not found", ex.getMessage());
-        verify(roleService).removeRole(1L, "NONEXISTENT");
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> roleController.removeRole(request)
+        );
+
+        assertEquals(ROLE_NOT_FOUND, ex.getMessage());
+        verify(roleService).removeRole(ACCOUNT_ID, NONEXISTENT);
     }
 
     @Test
     void getRolesByAccount_ShouldReturnOk_WhenAccountExists() {
-        Role role = new Role();
-        role.setName("PLAYER");
+        Role role = role(PLAYER);
 
-        when(roleService.getRolesByAccount(1L)).thenReturn(List.of(role));
+        when(roleService.getRolesByAccount(ACCOUNT_ID))
+                .thenReturn(List.of(role));
 
-        ResponseEntity<List<Role>> result = roleController.getRolesByAccount(1L);
+        ResponseEntity<List<Role>> result = roleController.getRolesByAccount(ACCOUNT_ID);
 
-        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertOk(result);
+        assertNotNull(result.getBody());
         assertEquals(1, result.getBody().size());
-        assertEquals("PLAYER", result.getBody().get(0).getName());
-        verify(roleService).getRolesByAccount(1L);
+        assertEquals(PLAYER, result.getBody().get(0).getName());
+
+        verify(roleService).getRolesByAccount(ACCOUNT_ID);
     }
 
     @Test
     void getRolesByAccount_ShouldReturnEmptyList_WhenAccountHasNoRoles() {
-        when(roleService.getRolesByAccount(1L)).thenReturn(List.of());
+        when(roleService.getRolesByAccount(ACCOUNT_ID))
+                .thenReturn(List.of());
 
-        ResponseEntity<List<Role>> result = roleController.getRolesByAccount(1L);
+        ResponseEntity<List<Role>> result = roleController.getRolesByAccount(ACCOUNT_ID);
 
-        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertOk(result);
+        assertNotNull(result.getBody());
         assertTrue(result.getBody().isEmpty());
-        verify(roleService).getRolesByAccount(1L);
+
+        verify(roleService).getRolesByAccount(ACCOUNT_ID);
     }
 
     @Test
     void getRolesByAccount_ShouldThrowException_WhenAccountDoesNotExist() {
-        when(roleService.getRolesByAccount(999L)).thenThrow(new RuntimeException("Account not found"));
+        when(roleService.getRolesByAccount(MISSING_ACCOUNT_ID))
+                .thenThrow(new RuntimeException(ACCOUNT_NOT_FOUND));
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> roleController.getRolesByAccount(999L));
-        assertEquals("Account not found", ex.getMessage());
-        verify(roleService).getRolesByAccount(999L);
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> roleController.getRolesByAccount(MISSING_ACCOUNT_ID)
+        );
+
+        assertEquals(ACCOUNT_NOT_FOUND, ex.getMessage());
+        verify(roleService).getRolesByAccount(MISSING_ACCOUNT_ID);
     }
 
     @Test
     void getPermissionsByRole_ShouldReturnOk_WhenRoleExists() {
-        Permission permission = new Permission();
-        permission.setName("tournament:read");
+        Permission permission = permission(TOURNAMENT_READ);
 
-        when(roleService.getPermissions(1L)).thenReturn(List.of(permission));
+        when(roleService.getPermissions(ROLE_ID))
+                .thenReturn(List.of(permission));
 
-        ResponseEntity<List<Permission>> result = roleController.getPermissionsByRole(1L);
+        ResponseEntity<List<Permission>> result = roleController.getPermissionsByRole(ROLE_ID);
 
-        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertOk(result);
+        assertNotNull(result.getBody());
         assertEquals(1, result.getBody().size());
-        assertEquals("tournament:read", result.getBody().get(0).getName());
-        verify(roleService).getPermissions(1L);
+        assertEquals(TOURNAMENT_READ, result.getBody().get(0).getName());
+
+        verify(roleService).getPermissions(ROLE_ID);
     }
 
     @Test
     void getPermissionsByRole_ShouldReturnEmptyList_WhenRoleHasNoPermissions() {
-        when(roleService.getPermissions(1L)).thenReturn(List.of());
+        when(roleService.getPermissions(ROLE_ID))
+                .thenReturn(List.of());
 
-        ResponseEntity<List<Permission>> result = roleController.getPermissionsByRole(1L);
+        ResponseEntity<List<Permission>> result = roleController.getPermissionsByRole(ROLE_ID);
 
-        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertOk(result);
+        assertNotNull(result.getBody());
         assertTrue(result.getBody().isEmpty());
-        verify(roleService).getPermissions(1L);
+
+        verify(roleService).getPermissions(ROLE_ID);
     }
 
     @Test
     void getPermissionsByRole_ShouldThrowException_WhenRoleDoesNotExist() {
-        when(roleService.getPermissions(999L)).thenThrow(new RuntimeException("Role not found"));
+        when(roleService.getPermissions(MISSING_ACCOUNT_ID))
+                .thenThrow(new RuntimeException(ROLE_NOT_FOUND));
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> roleController.getPermissionsByRole(999L));
-        assertEquals("Role not found", ex.getMessage());
-        verify(roleService).getPermissions(999L);
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> roleController.getPermissionsByRole(MISSING_ACCOUNT_ID)
+        );
+
+        assertEquals(ROLE_NOT_FOUND, ex.getMessage());
+        verify(roleService).getPermissions(MISSING_ACCOUNT_ID);
+    }
+
+    private AssignRoleRequest assignRoleRequest(Long accountId, String roleName) {
+        AssignRoleRequest request = new AssignRoleRequest();
+        request.setAccountId(accountId);
+        request.setRoleName(roleName);
+        return request;
+    }
+
+    private RemoveRoleRequest removeRoleRequest(Long accountId, String roleName) {
+        RemoveRoleRequest request = new RemoveRoleRequest();
+        request.setAccountId(accountId);
+        request.setRoleName(roleName);
+        return request;
+    }
+
+    private Role role(String name) {
+        Role role = new Role();
+        role.setId(ROLE_ID);
+        role.setName(name);
+        return role;
+    }
+
+    private Permission permission(String name) {
+        Permission permission = new Permission();
+        permission.setName(name);
+        return permission;
+    }
+
+    private void assertNoContent(ResponseEntity<Void> response) {
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    private void assertOk(ResponseEntity<?> response) {
+        assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 }
