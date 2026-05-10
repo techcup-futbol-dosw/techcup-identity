@@ -32,7 +32,7 @@ public class AccountController {
     }
 
     @PreAuthorize("hasAuthority('account:read:any') or @accountAccessPolicy.canReadAccount(#accountEmail, authentication)")
-    @GetMapping("/{accountEmail}")
+    @GetMapping("/email/{accountEmail}")
     public ResponseEntity<AccountResponse> getByEmail(@PathVariable String accountEmail) {
         AccountResponse response = accountService.findByEmail(accountEmail);
         return ResponseEntity.ok(response);
