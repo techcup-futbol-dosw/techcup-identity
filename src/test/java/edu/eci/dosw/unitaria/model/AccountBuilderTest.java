@@ -9,137 +9,63 @@ import edu.eci.dosw.model.IdentificationType;
 import edu.eci.dosw.model.Relation;
 import edu.eci.dosw.model.Role;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 class AccountBuilderTest {
 
-    private static final Long ACCOUNT_ID = 1L;
-    private static final Long ROLE_ID = 1L;
-
-    private static final String NAME = "Juan";
-    private static final String LAST_NAME = "Roa";
-    private static final String EMAIL = "juan@escuelaing.edu.co";
-    private static final String PASSWORD_HASH = "encoded-password";
-    private static final String PROGRAM = "INGENIERIA_SISTEMAS";
-    private static final String IDENTIFICATION = "123456789";
-    private static final String PLAYER = "PLAYER";
-    private static final String ADMIN = "ADMIN";
-
-    private static final Integer SEMESTER = 7;
-    private static final LocalDate BIRTH_DATE = LocalDate.of(2000, 5, 15);
-
     private AccountBuilder validBuilder() {
         return new AccountBuilder()
-                .id(ACCOUNT_ID)
-                .name(NAME)
-                .lastName(LAST_NAME)
-                .birthDate(BIRTH_DATE)
+                .id(1L)
+                .name("Juan")
+                .lastName("Roa")
+                .birthDate(LocalDate.of(2000, 5, 15))
                 .relation(Relation.ESTUDIANTE)
-                .semester(SEMESTER)
-                .program(PROGRAM)
-                .email(EMAIL)
-                .passwordHash(PASSWORD_HASH)
+                .semester(7)
+                .program("INGENIERIA_SISTEMAS")
+                .email("juan@escuelaing.edu.co")
+                .passwordHash("encoded-password")
                 .createdAt(LocalDateTime.now())
                 .gender(Gender.MALE)
                 .identificationType(IdentificationType.CC)
-                .identification(IDENTIFICATION)
-                .addRole(role(ROLE_ID, PLAYER));
+                .identification("123456789")
+                .addRole(new Role(1L, "PLAYER", List.of()));
     }
-
-    private Role role(Long id, String name) {
-        return new Role(id, name, List.of());
-    }
-
-    private void assertDefaultAccountFields(Account account) {
-        assertEquals(ACCOUNT_ID, account.getId());
-        assertEquals(NAME, account.getName());
-        assertEquals(LAST_NAME, account.getLastName());
-        assertEquals(BIRTH_DATE, account.getBirthDate());
-        assertEquals(Relation.ESTUDIANTE, account.getRelation());
-        assertEquals(SEMESTER, account.getSemester());
-        assertEquals(PROGRAM, account.getProgram());
-
-        assertEquals(EMAIL, account.getEmail());
-        assertEquals(PASSWORD_HASH, account.getPasswordHash());
-        assertEquals(AccountStatus.ACTIVE, account.getStatus());
-
-        assertEquals(Gender.MALE, account.getGender());
-        assertEquals(IdentificationType.CC, account.getIdentificationType());
-        assertEquals(IDENTIFICATION, account.getIdentification());
-
-        assertEquals(1, account.getRoles().size());
-    }
-
-    private void assertRole(Role role, String expectedName) {
-        assertEquals(expectedName, role.getName());
-    }
-    private static Stream<Arguments> invalidRequiredFields() {
-        return Stream.of(
-                arguments((Consumer<AccountBuilder>) builder -> builder.name(null), "Name is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.name("   "), "Name is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.lastName(null), "Last name is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.lastName("   "), "Last name is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.birthDate(null), "Birth date is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.relation(null), "Relation is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.semester(null), "Semester is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.program(null), "Program is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.program("   "), "Program is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.email(null), "Email is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.email("   "), "Email is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.passwordHash(null), "Password hash is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.passwordHash("   "), "Password hash is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.createdAt(null), "CreatedAt is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.gender(null), "Gender is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.identificationType(null), "Identification type is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.identification(null), "Identification is required"),
-                arguments((Consumer<AccountBuilder>) builder -> builder.identification("   "), "Identification is required")
-        );
-    }
-
-    private static Stream<Arguments> invalidRoles() {
-        return Stream.of(
-                arguments(
-                        (Consumer<AccountBuilder>) builder -> builder.roles(List.of()),
-                        "At least one role is required"
-                ),
-                arguments(
-                        (Consumer<AccountBuilder>) builder -> builder.roles(null),
-                        "At least one role is required"
-                ),
-                arguments(
-                        (Consumer<AccountBuilder>) builder -> builder.roles(List.of()).addRole(null),
-                        "At least one role is required"
-                )
-        );
-    }
-
 
     @Test
     void build_ShouldCreateAccount_WhenAllFieldsAreValid() {
         Account account = validBuilder().build();
 
-        assertDefaultAccountFields(account);
+        assertEquals(1L, account.getId());
+        assertEquals("Juan", account.getName());
+        assertEquals("Roa", account.getLastName());
+        assertEquals(LocalDate.of(2000, 5, 15), account.getBirthDate());
+        assertEquals(Relation.ESTUDIANTE, account.getRelation());
+        assertEquals(7, account.getSemester());
+        assertEquals("INGENIERIA_SISTEMAS", account.getProgram());
+
+        assertEquals("juan@escuelaing.edu.co", account.getEmail());
+        assertEquals("encoded-password", account.getPasswordHash());
+        assertEquals(AccountStatus.ACTIVE, account.getStatus());
+
         assertNotNull(account.getCreatedAt());
         assertNotNull(account.getUpdatedAt());
-        assertRole(account.getRoles().get(0), PLAYER);
+
+        assertEquals(Gender.MALE, account.getGender());
+        assertEquals(IdentificationType.CC, account.getIdentificationType());
+        assertEquals("123456789", account.getIdentification());
+
+        assertEquals(1, account.getRoles().size());
+        assertEquals("PLAYER", account.getRoles().get(0).getName());
     }
 
     @Test
     void build_ShouldSetDefaultStatusActive_WhenStatusIsNull() {
-        Account account = validBuilder()
-                .status(null)
-                .build();
+        Account account = validBuilder().status(null).build();
 
         assertEquals(AccountStatus.ACTIVE, account.getStatus());
     }
@@ -204,49 +130,225 @@ class AccountBuilderTest {
         assertEquals(lastLoginAt, account.getLastLoginAt());
     }
 
-    @ParameterizedTest(name = "{1}")
-    @MethodSource("invalidRequiredFields")
-    void build_ShouldThrowException_WhenRequiredFieldIsInvalid(
-            Consumer<AccountBuilder> invalidMutation,
-            String expectedMessage
-    ) {
-        AccountBuilder builder = validBuilder();
-        invalidMutation.accept(builder);
-
+    @Test
+    void build_ShouldThrowException_WhenNameIsNull() {
         InvalidAccountBuildException ex = assertThrows(
                 InvalidAccountBuildException.class,
-                builder::build
+                () -> validBuilder().name(null).build()
         );
 
-        assertEquals(expectedMessage, ex.getMessage());
+        assertEquals("Name is required", ex.getMessage());
     }
 
-    @ParameterizedTest(name = "{1}")
-    @MethodSource("invalidRoles")
-    void build_ShouldThrowException_WhenRolesAreInvalid(
-            Consumer<AccountBuilder> invalidMutation,
-            String expectedMessage
-    ) {
-        AccountBuilder builder = validBuilder();
-        invalidMutation.accept(builder);
-
+    @Test
+    void build_ShouldThrowException_WhenNameIsBlank() {
         InvalidAccountBuildException ex = assertThrows(
                 InvalidAccountBuildException.class,
-                builder::build
+                () -> validBuilder().name("   ").build()
         );
 
-        assertEquals(expectedMessage, ex.getMessage());
+        assertEquals("Name is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenLastNameIsNull() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().lastName(null).build()
+        );
+
+        assertEquals("Last name is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenLastNameIsBlank() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().lastName("   ").build()
+        );
+
+        assertEquals("Last name is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenBirthDateIsNull() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().birthDate(null).build()
+        );
+
+        assertEquals("Birth date is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenRelationIsNull() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().relation(null).build()
+        );
+
+        assertEquals("Relation is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenSemesterIsNull() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().semester(null).build()
+        );
+
+        assertEquals("Semester is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenProgramIsNull() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().program(null).build()
+        );
+
+        assertEquals("Program is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenProgramIsBlank() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().program("   ").build()
+        );
+
+        assertEquals("Program is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenEmailIsNull() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().email(null).build()
+        );
+
+        assertEquals("Email is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenEmailIsBlank() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().email("   ").build()
+        );
+
+        assertEquals("Email is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenPasswordHashIsNull() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().passwordHash(null).build()
+        );
+
+        assertEquals("Password hash is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenPasswordHashIsBlank() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().passwordHash("   ").build()
+        );
+
+        assertEquals("Password hash is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenCreatedAtIsNull() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().createdAt(null).build()
+        );
+
+        assertEquals("CreatedAt is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenGenderIsNull() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().gender(null).build()
+        );
+
+        assertEquals("Gender is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenIdentificationTypeIsNull() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().identificationType(null).build()
+        );
+
+        assertEquals("Identification type is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenIdentificationIsNull() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().identification(null).build()
+        );
+
+        assertEquals("Identification is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenIdentificationIsBlank() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().identification("   ").build()
+        );
+
+        assertEquals("Identification is required", ex.getMessage());
+    }
+
+    @Test
+    void build_ShouldThrowException_WhenRolesIsEmpty() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().roles(List.of()).build()
+        );
+
+        assertEquals("At least one role is required", ex.getMessage());
+    }
+
+    @Test
+    void addRole_ShouldNotAddNullRole() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().roles(List.of()).addRole(null).build()
+        );
+
+        assertEquals("At least one role is required", ex.getMessage());
     }
 
     @Test
     void roles_ShouldReplaceList_WhenCalledWithValidList() {
-        Role role = role(ROLE_ID, ADMIN);
+        Role role = new Role(1L, "ADMIN", List.of());
 
         Account account = validBuilder()
                 .roles(List.of(role))
                 .build();
 
         assertEquals(1, account.getRoles().size());
-        assertRole(account.getRoles().get(0), ADMIN);
+        assertEquals("ADMIN", account.getRoles().get(0).getName());
+    }
+
+    @Test
+    void roles_ShouldAssignEmptyList_WhenNullIsPassed() {
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                () -> validBuilder().roles(null).build()
+        );
+
+        assertEquals("At least one role is required", ex.getMessage());
     }
 }
