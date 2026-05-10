@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,6 +35,21 @@ class AccountBuilderTest {
                 .identificationType(IdentificationType.CC)
                 .identification("123456789")
                 .addRole(new Role(1L, "PLAYER", List.of()));
+    }
+    private void assertBuildFailure(Consumer<AccountBuilder> mutation, String expectedMessage) {
+        AccountBuilder builder = validBuilder();
+        mutation.accept(builder);
+
+        InvalidAccountBuildException ex = assertThrows(
+                InvalidAccountBuildException.class,
+                builder::build
+        );
+
+        assertEquals(expectedMessage, ex.getMessage());
+    }
+    private static void clearRolesAndAddNullRole(AccountBuilder builder) {
+        builder.roles(List.of());
+        builder.addRole(null);
     }
 
     @Test
@@ -132,202 +148,110 @@ class AccountBuilderTest {
 
     @Test
     void build_ShouldThrowException_WhenNameIsNull() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().name(null).build()
-        );
-
-        assertEquals("Name is required", ex.getMessage());
+        assertBuildFailure(builder -> builder.name(null),"Name is required");
     }
 
     @Test
     void build_ShouldThrowException_WhenNameIsBlank() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().name("   ").build()
-        );
+        assertBuildFailure(builder -> builder.name("  "),"Name is required");
 
-        assertEquals("Name is required", ex.getMessage());
     }
 
     @Test
     void build_ShouldThrowException_WhenLastNameIsNull() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().lastName(null).build()
-        );
-
-        assertEquals("Last name is required", ex.getMessage());
+        assertBuildFailure(builder -> builder.lastName(null), "Last name is required");
     }
 
-    @Test
+
+        @Test
     void build_ShouldThrowException_WhenLastNameIsBlank() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().lastName("   ").build()
-        );
+            assertBuildFailure(builder -> builder.lastName("  "), "Last name is required");
 
-        assertEquals("Last name is required", ex.getMessage());
-    }
+        }
 
     @Test
     void build_ShouldThrowException_WhenBirthDateIsNull() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().birthDate(null).build()
-        );
-
-        assertEquals("Birth date is required", ex.getMessage());
+        assertBuildFailure(builder -> builder.birthDate(null),"Birth date is required");
     }
 
     @Test
     void build_ShouldThrowException_WhenRelationIsNull() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().relation(null).build()
-        );
-
-        assertEquals("Relation is required", ex.getMessage());
+        assertBuildFailure(builder -> builder.relation(null), "Relation is required");
     }
 
     @Test
     void build_ShouldThrowException_WhenSemesterIsNull() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().semester(null).build()
-        );
-
-        assertEquals("Semester is required", ex.getMessage());
+        assertBuildFailure(builder -> builder.semester(null), "Semester is required");
     }
 
     @Test
     void build_ShouldThrowException_WhenProgramIsNull() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().program(null).build()
-        );
-
-        assertEquals("Program is required", ex.getMessage());
+        assertBuildFailure(builder -> builder.program(null), "Program is required");
     }
 
     @Test
     void build_ShouldThrowException_WhenProgramIsBlank() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().program("   ").build()
-        );
-
-        assertEquals("Program is required", ex.getMessage());
+        assertBuildFailure(builder -> builder.program("   "), "Program is required");
     }
 
     @Test
     void build_ShouldThrowException_WhenEmailIsNull() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().email(null).build()
-        );
-
-        assertEquals("Email is required", ex.getMessage());
+        assertBuildFailure(builder -> builder.email(null), "Email is required");
     }
 
     @Test
     void build_ShouldThrowException_WhenEmailIsBlank() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().email("   ").build()
-        );
-
-        assertEquals("Email is required", ex.getMessage());
+        assertBuildFailure(builder -> builder.email("   "), "Email is required");
     }
 
     @Test
     void build_ShouldThrowException_WhenPasswordHashIsNull() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().passwordHash(null).build()
-        );
-
-        assertEquals("Password hash is required", ex.getMessage());
+        assertBuildFailure(builder -> builder.passwordHash(null), "Password hash is required");
     }
 
     @Test
     void build_ShouldThrowException_WhenPasswordHashIsBlank() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().passwordHash("   ").build()
-        );
-
-        assertEquals("Password hash is required", ex.getMessage());
+        assertBuildFailure(builder -> builder.passwordHash("   "), "Password hash is required");
     }
 
     @Test
     void build_ShouldThrowException_WhenCreatedAtIsNull() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().createdAt(null).build()
-        );
-
-        assertEquals("CreatedAt is required", ex.getMessage());
+        assertBuildFailure(builder -> builder.createdAt(null), "CreatedAt is required");
     }
 
     @Test
     void build_ShouldThrowException_WhenGenderIsNull() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().gender(null).build()
-        );
-
-        assertEquals("Gender is required", ex.getMessage());
+        assertBuildFailure(builder -> builder.gender(null), "Gender is required");
     }
 
     @Test
     void build_ShouldThrowException_WhenIdentificationTypeIsNull() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().identificationType(null).build()
-        );
-
-        assertEquals("Identification type is required", ex.getMessage());
+        assertBuildFailure(builder -> builder.identificationType(null), "Identification type is required");
     }
 
     @Test
     void build_ShouldThrowException_WhenIdentificationIsNull() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().identification(null).build()
-        );
-
-        assertEquals("Identification is required", ex.getMessage());
+        assertBuildFailure(builder -> builder.identification(null), "Identification is required");
     }
 
     @Test
     void build_ShouldThrowException_WhenIdentificationIsBlank() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().identification("   ").build()
-        );
-
-        assertEquals("Identification is required", ex.getMessage());
+        assertBuildFailure(builder -> builder.identification("   "), "Identification is required");
     }
 
     @Test
     void build_ShouldThrowException_WhenRolesIsEmpty() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().roles(List.of()).build()
-        );
+        assertBuildFailure(builder -> builder.roles(List.of()), "At least one role is required");
+    }
 
-        assertEquals("At least one role is required", ex.getMessage());
+    @Test
+    void roles_ShouldAssignEmptyList_WhenNullIsPassed() {
+        assertBuildFailure(builder -> builder.roles(null), "At least one role is required");
     }
 
     @Test
     void addRole_ShouldNotAddNullRole() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().roles(List.of()).addRole(null).build()
-        );
-
-        assertEquals("At least one role is required", ex.getMessage());
+        assertBuildFailure(AccountBuilderTest::clearRolesAndAddNullRole, "At least one role is required");
     }
 
     @Test
@@ -340,15 +264,5 @@ class AccountBuilderTest {
 
         assertEquals(1, account.getRoles().size());
         assertEquals("ADMIN", account.getRoles().get(0).getName());
-    }
-
-    @Test
-    void roles_ShouldAssignEmptyList_WhenNullIsPassed() {
-        InvalidAccountBuildException ex = assertThrows(
-                InvalidAccountBuildException.class,
-                () -> validBuilder().roles(null).build()
-        );
-
-        assertEquals("At least one role is required", ex.getMessage());
     }
 }
