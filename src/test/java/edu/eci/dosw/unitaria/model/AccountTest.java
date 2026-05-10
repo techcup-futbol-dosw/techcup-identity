@@ -1,9 +1,5 @@
 package edu.eci.dosw.unitaria.model;
-
-import edu.eci.dosw.model.Relation;
-import edu.eci.dosw.model.AccountStatus;
 import edu.eci.dosw.model.*;
-
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -15,104 +11,130 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AccountTest {
 
-    private Account buildAccount() {
-        LocalDateTime now = LocalDateTime.now();
-        Role role = new Role(1L, "PLAYER", new ArrayList<>());
+    private static final Long ACCOUNT_ID = 1L;
+    private static final Long UPDATED_ACCOUNT_ID = 2L;
 
+    private static final Long PLAYER_ROLE_ID = 1L;
+    private static final Long ADMIN_ROLE_ID = 2L;
+
+    private static final String PLAYER = "PLAYER";
+    private static final String ADMIN = "ADMIN";
+
+    private static final String EMAIL = "juan@escuelaing.edu.co";
+    private static final String UPDATED_EMAIL = "otro@escuelaing.edu.co";
+
+    private static final String PASSWORD_HASH = "encoded-password";
+    private static final String UPDATED_PASSWORD_HASH = "new-password";
+
+    private static final String NAME = "Juan";
+    private static final String UPDATED_NAME = "David";
+
+    private static final String LAST_NAME = "Roa";
+    private static final String UPDATED_LAST_NAME = "Hernandez";
+
+    private static final String PROGRAM = "INGENIERIA_SISTEMAS";
+    private static final String UPDATED_PROGRAM = "INGENIERIA_INDUSTRIAL";
+
+    private static final String IDENTIFICATION = "123456789";
+    private static final String UPDATED_IDENTIFICATION = "987654321";
+
+    private static final Integer SEMESTER = 7;
+    private static final Integer UPDATED_SEMESTER = 8;
+
+    private static final LocalDate BIRTH_DATE = LocalDate.of(2000, 5, 15);
+    private static final LocalDate UPDATED_BIRTH_DATE = LocalDate.of(1999, 8, 20);
+
+    @Test
+    void isActive_ShouldReturnFalse_WhenStatusIsNull() {
+        Account account = buildAccount();
+
+        account.setStatus(null);
+
+        assertFalse(account.isActive());
+    }
+
+    private Account newAccount(LocalDateTime timestamp,
+                               LocalDateTime lastLoginAt,
+                               List<Role> roles) {
         return new Account(
-                LocalDate.of(2000, 5, 15),
-                now,
-                "juan@escuelaing.edu.co",
+                BIRTH_DATE,
+                timestamp,
+                EMAIL,
                 Gender.MALE,
-                1L,
-                "123456789",
+                ACCOUNT_ID,
+                IDENTIFICATION,
                 IdentificationType.CC,
-                null,
-                "Roa",
-                "Juan",
-                "encoded-password",
-                "INGENIERIA_SISTEMAS",
+                lastLoginAt,
+                LAST_NAME,
+                NAME,
+                PASSWORD_HASH,
+                PROGRAM,
                 Relation.ESTUDIANTE,
-                List.of(role),
-                7,
+                roles,
+                SEMESTER,
                 AccountStatus.ACTIVE,
-                now
+                timestamp
         );
+    }
+
+    private Role playerRole() {
+        return role(PLAYER_ROLE_ID, PLAYER);
+    }
+
+    private Role adminRole() {
+        return role(ADMIN_ROLE_ID, ADMIN);
+    }
+
+    private Role role(Long id, String name) {
+        return new Role(id, name, new ArrayList<>());
+    }
+
+    private void assertDefaultAccountFields(Account account) {
+        assertEquals(ACCOUNT_ID, account.getId());
+        assertEquals(NAME, account.getName());
+        assertEquals(LAST_NAME, account.getLastName());
+        assertEquals(BIRTH_DATE, account.getBirthDate());
+        assertEquals(Relation.ESTUDIANTE, account.getRelation());
+        assertEquals(SEMESTER, account.getSemester());
+        assertEquals(PROGRAM, account.getProgram());
+
+        assertEquals(EMAIL, account.getEmail());
+        assertEquals(PASSWORD_HASH, account.getPasswordHash());
+        assertEquals(AccountStatus.ACTIVE, account.getStatus());
+
+        assertEquals(Gender.MALE, account.getGender());
+        assertEquals(IdentificationType.CC, account.getIdentificationType());
+        assertEquals(IDENTIFICATION, account.getIdentification());
+    }
+
+    private void assertRole(Role role, Long expectedId, String expectedName) {
+        assertEquals(expectedId, role.getId());
+        assertEquals(expectedName, role.getName());
+    }
+
+
+    private Account buildAccount() {
+        return newAccount(LocalDateTime.now(), null, List.of(playerRole()));
     }
 
     @Test
     void constructor_ShouldSetAllFields() {
         LocalDateTime now = LocalDateTime.now();
-        LocalDate birthDate = LocalDate.of(2000, 5, 15);
-        Role role = new Role(1L, "PLAYER", new ArrayList<>());
 
-        Account account = new Account(
-                birthDate,
-                now,
-                "juan@escuelaing.edu.co",
-                Gender.MALE,
-                1L,
-                "123456789",
-                IdentificationType.CC,
-                now,
-                "Roa",
-                "Juan",
-                "encoded-password",
-                "INGENIERIA_SISTEMAS",
-                Relation.ESTUDIANTE,
-                List.of(role),
-                7,
-                AccountStatus.ACTIVE,
-                now
-        );
+        Account account = newAccount(now, now, List.of(playerRole()));
 
-        assertEquals(1L, account.getId());
-        assertEquals("Juan", account.getName());
-        assertEquals("Roa", account.getLastName());
-        assertEquals(birthDate, account.getBirthDate());
-        assertEquals(Relation.ESTUDIANTE, account.getRelation());
-        assertEquals(7, account.getSemester());
-        assertEquals("INGENIERIA_SISTEMAS", account.getProgram());
-
-        assertEquals("juan@escuelaing.edu.co", account.getEmail());
-        assertEquals("encoded-password", account.getPasswordHash());
-        assertEquals(AccountStatus.ACTIVE, account.getStatus());
-
+        assertDefaultAccountFields(account);
         assertEquals(now, account.getCreatedAt());
         assertEquals(now, account.getUpdatedAt());
         assertEquals(now, account.getLastLoginAt());
 
-        assertEquals(Gender.MALE, account.getGender());
-        assertEquals(IdentificationType.CC, account.getIdentificationType());
-        assertEquals("123456789", account.getIdentification());
-
         assertEquals(1, account.getRoles().size());
-        assertEquals("PLAYER", account.getRoles().get(0).getName());
+        assertRole(account.getRoles().get(0), PLAYER_ROLE_ID, PLAYER);
     }
 
     @Test
     void constructor_ShouldInitializeEmptyRoles_WhenNullIsPassed() {
-        LocalDateTime now = LocalDateTime.now();
-
-        Account account = new Account(
-                LocalDate.of(2000, 5, 15),
-                now,
-                "juan@escuelaing.edu.co",
-                Gender.MALE,
-                1L,
-                "123456789",
-                IdentificationType.CC,
-                null,
-                "Roa",
-                "Juan",
-                "encoded-password",
-                "INGENIERIA_SISTEMAS",
-                Relation.ESTUDIANTE,
-                null,
-                7,
-                AccountStatus.ACTIVE,
-                now
-        );
+        Account account = newAccount(LocalDateTime.now(), null, null);
 
         assertNotNull(account.getRoles());
         assertTrue(account.getRoles().isEmpty());
@@ -122,18 +144,17 @@ class AccountTest {
     void settersAndGetters_ShouldWorkCorrectly() {
         Account account = buildAccount();
         LocalDateTime now = LocalDateTime.now();
-        LocalDate birthDate = LocalDate.of(1999, 8, 20);
 
-        account.setId(2L);
-        account.setName("David");
-        account.setLastName("Hernandez");
-        account.setBirthDate(birthDate);
+        account.setId(UPDATED_ACCOUNT_ID);
+        account.setName(UPDATED_NAME);
+        account.setLastName(UPDATED_LAST_NAME);
+        account.setBirthDate(UPDATED_BIRTH_DATE);
         account.setRelation(Relation.ESTUDIANTE);
-        account.setSemester(8);
-        account.setProgram("INGENIERIA_INDUSTRIAL");
+        account.setSemester(UPDATED_SEMESTER);
+        account.setProgram(UPDATED_PROGRAM);
 
-        account.setEmail("otro@escuelaing.edu.co");
-        account.setPasswordHash("new-password");
+        account.setEmail(UPDATED_EMAIL);
+        account.setPasswordHash(UPDATED_PASSWORD_HASH);
         account.setStatus(AccountStatus.INACTIVE);
 
         account.setCreatedAt(now);
@@ -142,18 +163,18 @@ class AccountTest {
 
         account.setGender(Gender.MALE);
         account.setIdentificationType(IdentificationType.CC);
-        account.setIdentification("987654321");
+        account.setIdentification(UPDATED_IDENTIFICATION);
 
-        assertEquals(2L, account.getId());
-        assertEquals("David", account.getName());
-        assertEquals("Hernandez", account.getLastName());
-        assertEquals(birthDate, account.getBirthDate());
+        assertEquals(UPDATED_ACCOUNT_ID, account.getId());
+        assertEquals(UPDATED_NAME, account.getName());
+        assertEquals(UPDATED_LAST_NAME, account.getLastName());
+        assertEquals(UPDATED_BIRTH_DATE, account.getBirthDate());
         assertEquals(Relation.ESTUDIANTE, account.getRelation());
-        assertEquals(8, account.getSemester());
-        assertEquals("INGENIERIA_INDUSTRIAL", account.getProgram());
+        assertEquals(UPDATED_SEMESTER, account.getSemester());
+        assertEquals(UPDATED_PROGRAM, account.getProgram());
 
-        assertEquals("otro@escuelaing.edu.co", account.getEmail());
-        assertEquals("new-password", account.getPasswordHash());
+        assertEquals(UPDATED_EMAIL, account.getEmail());
+        assertEquals(UPDATED_PASSWORD_HASH, account.getPasswordHash());
         assertEquals(AccountStatus.INACTIVE, account.getStatus());
 
         assertEquals(now, account.getCreatedAt());
@@ -162,18 +183,17 @@ class AccountTest {
 
         assertEquals(Gender.MALE, account.getGender());
         assertEquals(IdentificationType.CC, account.getIdentificationType());
-        assertEquals("987654321", account.getIdentification());
+        assertEquals(UPDATED_IDENTIFICATION, account.getIdentification());
     }
 
     @Test
     void setRoles_ShouldAssignRoles() {
         Account account = buildAccount();
-        Role newRole = new Role(2L, "ADMIN", new ArrayList<>());
 
-        account.setRoles(List.of(newRole));
+        account.setRoles(List.of(adminRole()));
 
         assertEquals(1, account.getRoles().size());
-        assertEquals("ADMIN", account.getRoles().get(0).getName());
+        assertRole(account.getRoles().get(0), ADMIN_ROLE_ID, ADMIN);
     }
 
     @Test
@@ -189,9 +209,8 @@ class AccountTest {
     @Test
     void addRole_ShouldAddRole_WhenNotAlreadyPresent() {
         Account account = buildAccount();
-        Role newRole = new Role(2L, "ADMIN", new ArrayList<>());
 
-        account.addRole(newRole);
+        account.addRole(adminRole());
 
         assertEquals(2, account.getRoles().size());
     }
@@ -199,82 +218,36 @@ class AccountTest {
     @Test
     void addRole_ShouldNotAddDuplicate_WhenRoleAlreadyExists() {
         Account account = buildAccount();
-        Role duplicate = new Role(1L, "PLAYER", new ArrayList<>());
 
-        account.addRole(duplicate);
+        account.addRole(playerRole());
 
         assertEquals(1, account.getRoles().size());
     }
 
     @Test
     void addRole_ShouldInitializeList_WhenRolesIsNull() {
-        LocalDateTime now = LocalDateTime.now();
+        Account account = newAccount(LocalDateTime.now(), null, null);
 
-        Account account = new Account(
-                LocalDate.of(2000, 5, 15),
-                now,
-                "juan@escuelaing.edu.co",
-                Gender.MALE,
-                1L,
-                "123456789",
-                IdentificationType.CC,
-                null,
-                "Roa",
-                "Juan",
-                "encoded-password",
-                "INGENIERIA_SISTEMAS",
-                Relation.ESTUDIANTE,
-                null,
-                7,
-                AccountStatus.ACTIVE,
-                now
-        );
-
-        Role role = new Role(1L, "PLAYER", new ArrayList<>());
-
-        account.addRole(role);
+        account.addRole(playerRole());
 
         assertEquals(1, account.getRoles().size());
-        assertEquals("PLAYER", account.getRoles().get(0).getName());
+        assertRole(account.getRoles().get(0), PLAYER_ROLE_ID, PLAYER);
     }
 
     @Test
     void removeRole_ShouldRemoveRole_WhenRoleExists() {
         Account account = buildAccount();
-        Role roleToRemove = new Role(1L, "PLAYER", new ArrayList<>());
 
-        account.removeRole(roleToRemove);
+        account.removeRole(playerRole());
 
         assertTrue(account.getRoles().isEmpty());
     }
 
     @Test
     void removeRole_ShouldDoNothing_WhenRolesIsNull() {
-        LocalDateTime now = LocalDateTime.now();
+        Account account = newAccount(LocalDateTime.now(), null, null);
 
-        Account account = new Account(
-                LocalDate.of(2000, 5, 15),
-                now,
-                "juan@escuelaing.edu.co",
-                Gender.MALE,
-                1L,
-                "123456789",
-                IdentificationType.CC,
-                null,
-                "Roa",
-                "Juan",
-                "encoded-password",
-                "INGENIERIA_SISTEMAS",
-                Relation.ESTUDIANTE,
-                null,
-                7,
-                AccountStatus.ACTIVE,
-                now
-        );
-
-        Role role = new Role(1L, "PLAYER", new ArrayList<>());
-
-        assertDoesNotThrow(() -> account.removeRole(role));
+        assertDoesNotThrow(() -> account.removeRole(playerRole()));
     }
 
     @Test
@@ -297,23 +270,5 @@ class AccountTest {
         Account account = buildAccount();
 
         assertTrue(account.isActive());
-    }
-
-    @Test
-    void isActive_ShouldReturnFalse_WhenStatusIsInactive() {
-        Account account = buildAccount();
-
-        account.setStatus(AccountStatus.INACTIVE);
-
-        assertFalse(account.isActive());
-    }
-
-    @Test
-    void isActive_ShouldReturnFalse_WhenStatusIsNull() {
-        Account account = buildAccount();
-
-        account.setStatus(null);
-
-        assertFalse(account.isActive());
     }
 }
