@@ -211,7 +211,7 @@ class RoleDataInitializerTest {
     private boolean containsPermission(RoleEntity role, String permissionName) {
         return role.getPermissions().stream()
                 .map(PermissionEntity::getName)
-                .anyMatch(name -> permissionName.equals(name));
+                .anyMatch(permissionName::equals);
     }
 
     @SuppressWarnings("unchecked")
