@@ -53,7 +53,7 @@ public class AuthService {
     public AuthResponse login(AuthRequest request) {
         Account account = findAccountByEmailOrThrow(request.getEmail());
 
-        if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), account.getPasswordHash())) {
             log.warn("Login failed: invalid password for accountId={}", account.getId());
             throw new InvalidCredentialsException();
         }

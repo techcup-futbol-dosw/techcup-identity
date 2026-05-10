@@ -1,8 +1,11 @@
 package edu.eci.dosw.mapper;
 
 import edu.eci.dosw.dto.AccountResponse;
-import edu.eci.dosw.entity.*;
-import edu.eci.dosw.model.*;
+import edu.eci.dosw.entity.AccountEntity;
+import edu.eci.dosw.entity.RoleEntity;
+import edu.eci.dosw.model.Account;
+import edu.eci.dosw.model.AccountBuilder;
+import edu.eci.dosw.model.Role;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -18,7 +21,9 @@ public class AccountMapper {
     }
 
     public Account toModel(AccountEntity entity) {
-        if (entity == null) return null;
+        if (entity == null) {
+            return null;
+        }
 
         List<Role> roles = new ArrayList<>();
         if (entity.getRoles() != null) {
@@ -27,29 +32,50 @@ public class AccountMapper {
             }
         }
 
-        return new Account(
-                entity.getId(),
-                entity.getEmail(),
-                entity.getPassword(),
-                entity.getStatus(),
-                entity.getCreatedAt(),
-                entity.getUpdatedAt(),
-                entity.getLastLoginAt(),
-                roles
-        );
+        return new AccountBuilder()
+                .id(entity.getId())
+                .name(entity.getName())
+                .lastName(entity.getLastName())
+                .birthDate(entity.getBirthDate())
+                .relation(entity.getRelation())
+                .semester(entity.getSemester())
+                .program(entity.getProgram())
+                .email(entity.getEmail())
+                .passwordHash(entity.getPasswordHash())
+                .status(entity.getStatus())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .lastLoginAt(entity.getLastLoginAt())
+                .gender(entity.getGender())
+                .identificationType(entity.getIdentificationType())
+                .identification(entity.getIdentification())
+                .roles(roles)
+                .build();
     }
 
     public AccountEntity toEntity(Account model) {
-        if (model == null) return null;
+        if (model == null) {
+            return null;
+        }
 
         AccountEntity entity = new AccountEntity();
+
         entity.setId(model.getId());
+        entity.setName(model.getName());
+        entity.setLastName(model.getLastName());
+        entity.setBirthDate(model.getBirthDate());
+        entity.setRelation(model.getRelation());
+        entity.setSemester(model.getSemester());
+        entity.setProgram(model.getProgram());
         entity.setEmail(model.getEmail());
-        entity.setPassword(model.getPassword());
+        entity.setPasswordHash(model.getPasswordHash());
         entity.setStatus(model.getStatus());
         entity.setCreatedAt(model.getCreatedAt());
         entity.setUpdatedAt(model.getUpdatedAt());
         entity.setLastLoginAt(model.getLastLoginAt());
+        entity.setGender(model.getGender());
+        entity.setIdentificationType(model.getIdentificationType());
+        entity.setIdentification(model.getIdentification());
 
         List<RoleEntity> roleEntities = new ArrayList<>();
         if (model.getRoles() != null) {
@@ -57,13 +83,16 @@ public class AccountMapper {
                 roleEntities.add(roleMapper.toEntity(role));
             }
         }
+
         entity.setRoles(roleEntities);
 
         return entity;
     }
 
     public AccountResponse toResponse(Account model) {
-        if (model == null) return null;
+        if (model == null) {
+            return null;
+        }
 
         List<String> roleNames = new ArrayList<>();
         if (model.getRoles() != null) {
@@ -73,11 +102,20 @@ public class AccountMapper {
         }
 
         return new AccountResponse(
-                model.getId(),
-                model.getEmail(),
-                model.getStatus(),
                 model.getCreatedAt(),
-                roleNames
+                model.getBirthDate(),
+                model.getEmail(),
+                model.getGender(),
+                model.getId(),
+                model.getIdentification(),
+                model.getIdentificationType(),
+                model.getLastName(),
+                model.getName(),
+                model.getProgram(),
+                model.getRelation(),
+                roleNames,
+                model.getSemester(),
+                model.getStatus()
         );
     }
 }
