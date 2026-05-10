@@ -31,6 +31,13 @@ public class AccountController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('account:read:any') or @accountAccessPolicy.canReadAccount(#accountEmail, authentication)")
+    @GetMapping("/{accountEmail}")
+    public ResponseEntity<AccountResponse> getByEmail(@PathVariable String accountEmail) {
+        AccountResponse response = accountService.findByEmail(accountEmail);
+        return ResponseEntity.ok(response);
+    }
+
     @PreAuthorize("hasAuthority('account:deactivate:any')")
     @PatchMapping("/{accountId}/deactivate")
     public ResponseEntity<Void> deactivate(@PathVariable Long accountId) {
@@ -42,6 +49,4 @@ public class AccountController {
     public ResponseEntity<Boolean> existsByEmail(@RequestParam String email) {
         return ResponseEntity.ok(accountService.existsByEmail(email));
     }
-
-
 }

@@ -66,6 +66,12 @@ public class AccountService {
     }
 
     @Transactional
+    public AccountResponse findByEmail(String email) {
+        Account account= findAccountByEmailOrThrow(email);
+        return accountMapper.toResponse(account);
+    }
+
+    @Transactional
     public void deactivate(Long accountId) {
         Account account = findAccountByIdOrThrow(accountId);
 
@@ -93,6 +99,12 @@ public class AccountService {
         AccountEntity accountEntity = accountRepository.findById(accountId)
                 .orElseThrow(() -> new AccountNotFoundException(accountId));
 
+        return accountMapper.toModel(accountEntity);
+    }
+
+    private Account findAccountByEmailOrThrow(String email) {
+        AccountEntity accountEntity = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new AccountNotFoundException(email));
         return accountMapper.toModel(accountEntity);
     }
 
