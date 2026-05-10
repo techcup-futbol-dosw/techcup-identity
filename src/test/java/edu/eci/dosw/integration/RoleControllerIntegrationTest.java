@@ -2,17 +2,17 @@ package edu.eci.dosw.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.eci.dosw.dto.AssignRoleRequest;
+import edu.eci.dosw.model.Relation;
 import edu.eci.dosw.dto.RemoveRoleRequest;
 import edu.eci.dosw.entity.AccountEntity;
-import edu.eci.dosw.entity.AccountStatus;
+import edu.eci.dosw.model.AccountStatus;
 import edu.eci.dosw.entity.PermissionEntity;
 import edu.eci.dosw.entity.RoleEntity;
 import edu.eci.dosw.mapper.AccountMapper;
 import edu.eci.dosw.mapper.RoleMapper;
-import edu.eci.dosw.model.Account;
-import edu.eci.dosw.model.AccountBuilder;
-import edu.eci.dosw.model.Role;
+import edu.eci.dosw.model.*;
 import edu.eci.dosw.repository.AccountRepository;
+import edu.eci.dosw.repository.PermissionRepository;
 import edu.eci.dosw.repository.RefreshTokenRepository;
 import edu.eci.dosw.repository.RoleRepository;
 import edu.eci.dosw.service.JwtService;
@@ -28,6 +28,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +49,10 @@ class RoleControllerIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private PermissionRepository permissionRepository;
+
 
     @Autowired
     private AccountRepository accountRepository;
@@ -79,6 +84,7 @@ class RoleControllerIntegrationTest {
         refreshTokenRepository.deleteAllInBatch();
         accountRepository.deleteAllInBatch();
         roleRepository.deleteAllInBatch();
+        permissionRepository.deleteAllInBatch();
 
         playerRoleEntity = createRole("PLAYER");
         captainRoleEntity = createRole("CAPTAIN");
@@ -274,6 +280,7 @@ class RoleControllerIntegrationTest {
     void shouldReturnPermissionsByRoleSuccessfully() throws Exception {
         PermissionEntity permission = new PermissionEntity();
         permission.setName("team:create:own");
+        permission = permissionRepository.save(permission);
 
         captainRoleEntity.setPermissions(new ArrayList<>(List.of(permission)));
         captainRoleEntity = roleRepository.save(captainRoleEntity);
@@ -286,7 +293,8 @@ class RoleControllerIntegrationTest {
 
         mockMvc.perform(get("/roles/{roleId}/permissions", captainRoleEntity.getId())
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("team:create:own"));
     }
     @Test
     @DisplayName("Should return 403 when caller tries to read permissions without permission")
@@ -318,10 +326,19 @@ class RoleControllerIntegrationTest {
                                                  AccountStatus status,
                                                  RoleEntity... roleEntities) {
         AccountBuilder builder = new AccountBuilder()
+                .name("Juan")
+                .lastName("Roa")
+                .birthDate(LocalDate.of(2000, 5, 15))
+                .relation(Relation.ESTUDIANTE)
+                .semester(7)
+                .program("SISTEMAS")
                 .email(email)
                 .passwordHash(passwordEncoder.encode(rawPassword))
                 .status(status)
-                .createdAt(LocalDateTime.now());
+                .createdAt(LocalDateTime.now())
+                .gender(Gender.MALE)
+                .identificationType(IdentificationType.CC)
+                .identification("ROLE-" + Math.abs(email.hashCode()));
 
         for (RoleEntity roleEntity : roleEntities) {
             Role roleModel = roleMapper.toModel(roleEntity);

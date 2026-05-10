@@ -2,19 +2,14 @@ package edu.eci.dosw.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.eci.dosw.dto.AuthRequest;
-import edu.eci.dosw.dto.LogoutRequest;
-import edu.eci.dosw.dto.RefreshTokenRequest;
-import edu.eci.dosw.dto.TokenValidationRequest;
+import edu.eci.dosw.dto.*;
 import edu.eci.dosw.entity.AccountEntity;
-import edu.eci.dosw.entity.AccountStatus;
+import edu.eci.dosw.model.AccountStatus;
 import edu.eci.dosw.entity.RefreshTokenEntity;
 import edu.eci.dosw.entity.RoleEntity;
 import edu.eci.dosw.mapper.AccountMapper;
 import edu.eci.dosw.mapper.RoleMapper;
-import edu.eci.dosw.model.Account;
-import edu.eci.dosw.model.AccountBuilder;
-import edu.eci.dosw.model.Role;
+import edu.eci.dosw.model.*;
 import edu.eci.dosw.repository.AccountRepository;
 import edu.eci.dosw.repository.RefreshTokenRepository;
 import edu.eci.dosw.repository.RoleRepository;
@@ -30,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -238,23 +234,6 @@ class AuthControllerIntegrationTest {
         RefreshTokenEntity storedToken = refreshTokenRepository.findByToken(refreshToken).orElseThrow();
         assertThat(storedToken.isRevoked()).isTrue();
     }
-
-    private AccountEntity createPersistedAccount(String email,
-                                                 String rawPassword,
-                                                 AccountStatus status,
-                                                 RoleEntity roleEntity) {
-        Role roleModel = roleMapper.toModel(roleEntity);
-
-        Account account = new AccountBuilder()
-                .email(email)
-                .passwordHash(passwordEncoder.encode(rawPassword))
-                .status(status)
-                .createdAt(LocalDateTime.now())
-                .addRole(roleModel)
-                .build();
-
-        return accountRepository.save(accountMapper.toEntity(account));
-    }
     @Test
     @DisplayName("Should validate token successfully")
     void shouldValidateTokenSuccessfully() throws Exception {
@@ -305,5 +284,32 @@ class AuthControllerIntegrationTest {
                 .andExpect(jsonPath("$.status").value(401))
                 .andExpect(jsonPath("$.message").exists());
     }
+    private AccountEntity createPersistedAccount(String email,
+                                                 String rawPassword,
+                                                 AccountStatus status,
+                                                 RoleEntity roleEntity) {
+        Role roleModel = roleMapper.toModel(roleEntity);
 
+        LocalDateTime now = LocalDateTime.now();
+
+        Account account = new AccountBuilder()
+                .name("Juan")
+                .lastName("Roa")
+                .birthDate(LocalDate.of(2000, 5, 15))
+                .relation(Relation.ESTUDIANTE)
+                .semester(7)
+                .program("SISTEMAS")
+                .email(email)
+                .passwordHash(passwordEncoder.encode(rawPassword))
+                .status(status)
+                .createdAt(now)
+                .updatedAt(now)
+                .gender(Gender.MALE)
+                .identificationType(IdentificationType.CC)
+                .identification("AUTH-" + Math.abs(email.hashCode()))
+                .addRole(roleModel)
+                .build();
+
+        return accountRepository.save(accountMapper.toEntity(account));
+    }
 }

@@ -1,12 +1,11 @@
 package edu.eci.dosw.unitaria.service;
 
+import edu.eci.dosw.model.Relation;
+import edu.eci.dosw.model.AccountStatus;
 import edu.eci.dosw.mapper.AccountMapper;
 import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.mapper.RoleMapper;
-import edu.eci.dosw.model.Account;
-import edu.eci.dosw.model.AccountBuilder;
-import edu.eci.dosw.model.Permission;
-import edu.eci.dosw.model.Role;
+import edu.eci.dosw.model.*;
 import edu.eci.dosw.repository.AccountRepository;
 import edu.eci.dosw.repository.RoleRepository;
 import edu.eci.dosw.service.RoleService;
@@ -14,14 +13,12 @@ import edu.eci.dosw.service.RoleService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import edu.eci.dosw.entity.RoleEntity;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,13 +58,7 @@ class RoleServiceTest {
         role.setId(10L);
         role.setName("PLAYER");
 
-        AccountBuilder accountBuilder = new AccountBuilder();
-        accountBuilder.email("juan@escuelaing.edu.co")
-                .passwordHash("encoded-password")
-                .id(1L)
-                .createdAt(LocalDateTime.now())
-                .roles(new ArrayList<>(List.of(role)));
-        Account account = accountBuilder.build();
+        Account account = buildValidAccount(role);
 
         when(accountRepository.findById(accountId))
                 .thenReturn(Optional.of(accountEntity));
@@ -117,16 +108,12 @@ class RoleServiceTest {
     void assignRole_ShouldThrowException_WhenRoleDoesNotExist() {
         // Arrange
         Long accountId = 1L;
-        String roleName = "PLAYER";
+        Role existingRole = new Role();
+        existingRole.setId(20L);
+        existingRole.setName("ADMIN");
 
+        Account account = buildValidAccount(existingRole);
         AccountEntity accountEntity = new AccountEntity();
-        AccountBuilder accountBuilder = new AccountBuilder();
-        accountBuilder.email("juan@escuelaing.edu.co")
-                .passwordHash("encoded-password")
-                .id(1L)
-                .createdAt(LocalDateTime.now())
-                .addRole(new Role());
-        Account account = accountBuilder.build();
 
         when(accountRepository.findById(accountId))
                 .thenReturn(Optional.of(accountEntity));
@@ -134,18 +121,18 @@ class RoleServiceTest {
         when(accountMapper.toModel(accountEntity))
                 .thenReturn(account);
 
-        when(roleRepository.findByNameIgnoreCase(roleName))
+        when(roleRepository.findByNameIgnoreCase(existingRole.getName()))
                 .thenReturn(Optional.empty());
 
         // Act
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> roleService.assignRole(accountId, roleName));
+                () -> roleService.assignRole(accountId, existingRole.getName()));
 
         // Assert
-        assertEquals("Role not found: PLAYER", ex.getMessage());
+        assertEquals("Role not found: ADMIN", ex.getMessage());
 
         verify(accountRepository).findById(accountId);
-        verify(roleRepository).findByNameIgnoreCase(roleName);
+        verify(roleRepository).findByNameIgnoreCase(existingRole.getName());
         verify(accountRepository, never()).save(any());
     }
 
@@ -161,13 +148,7 @@ class RoleServiceTest {
         Role role = new Role();
         role.setId(10L);
         role.setName("PLAYER");
-        AccountBuilder accountBuilder = new AccountBuilder();
-        accountBuilder.email("juan@escuelaing.edu.co")
-                .passwordHash("encoded-password")
-                .id(1L)
-                .createdAt(LocalDateTime.now())
-                .addRole(role);
-        Account account = accountBuilder.build();
+        Account account = buildValidAccount(role);
 
         when(accountRepository.findById(accountId))
                 .thenReturn(Optional.of(accountEntity));
@@ -213,13 +194,7 @@ class RoleServiceTest {
         anotherRole.setId(20L);
         anotherRole.setName("ADMIN");
 
-        AccountBuilder accountBuilder = new AccountBuilder();
-        accountBuilder.email("juan@escuelaing.edu.co")
-                .passwordHash("encoded-password")
-                .id(1L)
-                .createdAt(LocalDateTime.now())
-                .addRole(anotherRole);
-        Account account = accountBuilder.build();
+        Account account = buildValidAccount(anotherRole);
 
         when(accountRepository.findById(accountId))
                 .thenReturn(Optional.of(accountEntity));
@@ -261,14 +236,7 @@ class RoleServiceTest {
         role2.setId(20L);
         role2.setName("ADMIN");
 
-        AccountBuilder accountBuilder = new AccountBuilder();
-        accountBuilder.email("juan@escuelaing.edu.co")
-                .passwordHash("encoded-password")
-                .id(1L)
-                .createdAt(LocalDateTime.now())
-                .addRole(role1)
-                .addRole(role2);
-        Account account = accountBuilder.build();
+        Account account = buildValidAccount(role1, role2);
 
         when(accountRepository.findById(accountId))
                 .thenReturn(Optional.of(accountEntity));
@@ -442,5 +410,30 @@ class RoleServiceTest {
         // Assert
         assertEquals("Account not found with id: 999", ex.getMessage());
         verify(accountRepository).findById(accountId);
+    }
+
+    private Account buildValidAccount(Role... roles) {
+        AccountBuilder builder = new AccountBuilder()
+                .id(1L)
+                .name("Juan")
+                .lastName("Roa")
+                .birthDate(LocalDate.of(2000, 5, 15))
+                .relation(Relation.ESTUDIANTE)
+                .semester(7)
+                .program("SISTEMAS")
+                .email("juan@escuelaing.edu.co")
+                .passwordHash("encoded-password")
+                .status(AccountStatus.ACTIVE)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .gender(Gender.MALE)
+                .identificationType(IdentificationType.CC)
+                .identification("ROLE-SERVICE-123");
+
+        for (Role role : roles) {
+            builder.addRole(role);
+        }
+
+        return builder.build();
     }
 }

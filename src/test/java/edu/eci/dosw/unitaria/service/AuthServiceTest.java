@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -53,18 +54,53 @@ class AuthServiceTest {
     private AuthService authService;
 
     private Account buildAccount() {
+        return buildAccount(AccountStatus.ACTIVE);
+    }
+
+    private Account buildAccount(AccountStatus status) {
+        Role role = new Role();
+        role.setId(1L);
+        role.setName("PLAYER");
+
         return new AccountBuilder()
                 .id(1L)
+                .name("Juan")
+                .lastName("Roa")
+                .birthDate(LocalDate.of(2000, 5, 15))
+                .relation(Relation.ESTUDIANTE)
+                .semester(7)
+                .program("SISTEMAS")
                 .email("juan@escuelaing.edu.co")
                 .passwordHash("encoded-password")
+                .status(status)
                 .createdAt(LocalDateTime.now())
-                .addRole(new Role())
+                .updatedAt(LocalDateTime.now())
+                .gender(Gender.MALE)
+                .identificationType(IdentificationType.CC)
+                .identification("AUTH-SERVICE-123")
+                .addRole(role)
                 .build();
     }
 
     private AccountEntity buildAccountEntity() {
         AccountEntity entity = new AccountEntity();
+
         entity.setId(1L);
+        entity.setName("Juan");
+        entity.setLastName("Roa");
+        entity.setBirthDate(LocalDate.of(2000, 5, 15));
+        entity.setRelation(Relation.ESTUDIANTE);
+        entity.setSemester(7);
+        entity.setProgram("SISTEMAS");
+        entity.setEmail("juan@escuelaing.edu.co");
+        entity.setPasswordHash("encoded-password");
+        entity.setStatus(AccountStatus.ACTIVE);
+        entity.setCreatedAt(LocalDateTime.now());
+        entity.setUpdatedAt(LocalDateTime.now());
+        entity.setGender(Gender.MALE);
+        entity.setIdentificationType(IdentificationType.CC);
+        entity.setIdentification("AUTH-SERVICE-123");
+
         return entity;
     }
 
@@ -104,6 +140,10 @@ class AuthServiceTest {
 
         when(jwtService.getAccessTokenExpiration())
                 .thenReturn(3600000L);
+
+        when(jwtService.getRefreshTokenExpiration())
+                .thenReturn(604800000L);
+
 
         AuthResponse result = authService.login(request);
 
@@ -179,14 +219,7 @@ class AuthServiceTest {
 
         AccountEntity accountEntity = buildAccountEntity();
 
-        Account account = new AccountBuilder()
-                .id(1L)
-                .email("juan@escuelaing.edu.co")
-                .passwordHash("encoded-password")
-                .createdAt(LocalDateTime.now())
-                .addRole(new Role())
-                .status(AccountStatus.INACTIVE)
-                .build();
+        Account account = buildAccount(AccountStatus.INACTIVE);
 
         when(accountRepository.findByEmail("juan@escuelaing.edu.co"))
                 .thenReturn(Optional.of(accountEntity));
@@ -383,6 +416,8 @@ class AuthServiceTest {
         when(jwtService.generateRefreshToken(1L))
                 .thenReturn("new-refresh-token");
 
+        when(jwtService.getRefreshTokenExpiration())
+                .thenReturn(604800000L);
         when(refreshTokenRepository.save(any(RefreshTokenEntity.class)))
                 .thenReturn(new RefreshTokenEntity());
 
@@ -476,14 +511,7 @@ class AuthServiceTest {
 
         AccountEntity accountEntity = buildAccountEntity();
 
-        Account account = new AccountBuilder()
-                .id(1L)
-                .email("juan@escuelaing.edu.co")
-                .passwordHash("encoded-password")
-                .createdAt(LocalDateTime.now())
-                .addRole(new Role())
-                .status(AccountStatus.INACTIVE)
-                .build();
+        Account account = buildAccount(AccountStatus.INACTIVE);
 
         when(jwtService.isTokenValid("valid-token"))
                 .thenReturn(true);

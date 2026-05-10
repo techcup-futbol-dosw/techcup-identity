@@ -6,6 +6,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -145,6 +150,74 @@ class GlobalExceptionHandlerTest {
         assertEquals(
                 "An unexpected error occurred",
                 response.getBody().getMessage()
+        );
+    }
+    @Test
+    void handleValidationException_ShouldReturnBadRequestWithFieldErrorMessage() {
+        MethodArgumentNotValidException exception =
+                mock(MethodArgumentNotValidException.class);
+
+        BindingResult bindingResult = mock(BindingResult.class);
+
+        FieldError fieldError = new FieldError(
+                "registerAccountRequest",
+                "birthDate",
+                "Birth date must be in the past"
+        );
+
+        when(exception.getBindingResult()).thenReturn(bindingResult);
+        when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError));
+
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleValidationException(exception, request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+
+        assertEquals(
+                "Birth date must be in the past",
+                response.getBody().getMessage()
+        );
+
+        assertEquals(
+                "/test",
+                response.getBody().getPath()
+        );
+
+        assertEquals(
+                "Bad Request",
+                response.getBody().getError()
+        );
+    }
+    @Test
+    void handleValidationException_ShouldReturnDefaultMessage_WhenNoFieldErrorsExist() {
+        MethodArgumentNotValidException exception =
+                mock(MethodArgumentNotValidException.class);
+
+        BindingResult bindingResult = mock(BindingResult.class);
+
+        when(exception.getBindingResult()).thenReturn(bindingResult);
+        when(bindingResult.getFieldErrors()).thenReturn(List.of());
+
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleValidationException(exception, request);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+
+        assertEquals(
+                "Invalid request data",
+                response.getBody().getMessage()
+        );
+
+        assertEquals(
+                "/test",
+                response.getBody().getPath()
+        );
+
+        assertEquals(
+                "Bad Request",
+                response.getBody().getError()
         );
     }
 }
