@@ -3,10 +3,6 @@ package edu.eci.dosw.unitaria.service;
 import edu.eci.dosw.mapper.AccountMapper;
 import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.mapper.RoleMapper;
-import edu.eci.dosw.model.Account;
-import edu.eci.dosw.model.AccountBuilder;
-import edu.eci.dosw.model.Permission;
-import edu.eci.dosw.model.Role;
 import edu.eci.dosw.repository.AccountRepository;
 import edu.eci.dosw.repository.RoleRepository;
 import edu.eci.dosw.service.RoleService;
@@ -14,23 +10,46 @@ import edu.eci.dosw.service.RoleService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import edu.eci.dosw.entity.RoleEntity;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static edu.eci.dosw.testutil.TestDataFactory.validAccount;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import edu.eci.dosw.model.Account;
+import edu.eci.dosw.model.Permission;
+import edu.eci.dosw.model.Role;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RoleServiceTest {
+
+    private static final Long ACCOUNT_ID = 1L;
+    private static final Long MISSING_ACCOUNT_ID = 999L;
+
+    private static final Long PLAYER_ROLE_ID = 10L;
+    private static final Long ADMIN_ROLE_ID = 20L;
+    private static final Long MISSING_ROLE_ID = 999L;
+
+    private static final String EMAIL = "juan@escuelaing.edu.co";
+
+    private static final String PLAYER = "PLAYER";
+    private static final String ADMIN = "ADMIN";
+
+    private static final String READ = "READ";
+    private static final String WRITE = "WRITE";
+    private static final String DELETE = "DELETE";
 
     @Mock
     private RoleRepository roleRepository;
@@ -47,46 +66,20 @@ class RoleServiceTest {
     @InjectMocks
     private RoleService roleService;
 
-
     @Test
     void assignRole_ShouldDoNothing_WhenRoleAlreadyAssigned() {
-        // Arrange
-        Long accountId = 1L;
-        String roleName = "PLAYER";
+        AccountEntity accountEntity = accountEntity();
+        RoleEntity roleEntity = roleEntity(PLAYER_ROLE_ID, PLAYER);
+        Role role = role(PLAYER_ROLE_ID, PLAYER);
+        Account account = accountWithRoles(role);
 
-        AccountEntity accountEntity = new AccountEntity();
-        RoleEntity roleEntity = new RoleEntity();
+        mockAccountLookup(accountEntity, account);
+        mockRoleLookup(PLAYER, roleEntity, role);
 
-        Role role = new Role();
-        role.setId(10L);
-        role.setName("PLAYER");
+        roleService.assignRole(ACCOUNT_ID, PLAYER);
 
-        AccountBuilder accountBuilder = new AccountBuilder();
-        accountBuilder.email("juan@escuelaing.edu.co")
-                .passwordHash("encoded-password")
-                .id(1L)
-                .createdAt(LocalDateTime.now())
-                .roles(new ArrayList<>(List.of(role)));
-        Account account = accountBuilder.build();
-
-        when(accountRepository.findById(accountId))
-                .thenReturn(Optional.of(accountEntity));
-
-        when(accountMapper.toModel(accountEntity))
-                .thenReturn(account);
-
-        when(roleRepository.findByNameIgnoreCase(roleName))
-                .thenReturn(Optional.of(roleEntity));
-
-        when(roleMapper.toModel(roleEntity))
-                .thenReturn(role);
-
-        // Act
-        roleService.assignRole(accountId, roleName);
-
-        // Assert
-        verify(accountRepository).findById(accountId);
-        verify(roleRepository).findByNameIgnoreCase(roleName);
+        verify(accountRepository).findById(ACCOUNT_ID);
+        verify(roleRepository).findByNameIgnoreCase(PLAYER);
         verify(accountRepository, never()).save(any());
         verify(accountMapper, never()).toEntity(any());
 
@@ -95,101 +88,61 @@ class RoleServiceTest {
 
     @Test
     void assignRole_ShouldThrowException_WhenAccountDoesNotExist() {
-        // Arrange
-        Long accountId = 1L;
-
-        when(accountRepository.findById(accountId))
+        when(accountRepository.findById(ACCOUNT_ID))
                 .thenReturn(Optional.empty());
 
-        // Act
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> roleService.assignRole(accountId, "PLAYER"));
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> roleService.assignRole(ACCOUNT_ID, PLAYER)
+        );
 
-        // Assert
         assertEquals("Account not found with id: 1", ex.getMessage());
 
-        verify(accountRepository).findById(accountId);
-        verifyNoInteractions(roleRepository, roleMapper);
+        verify(accountRepository).findById(ACCOUNT_ID);
+        verifyNoInteractions(roleRepository, roleMapper, accountMapper);
         verify(accountRepository, never()).save(any());
     }
 
     @Test
     void assignRole_ShouldThrowException_WhenRoleDoesNotExist() {
-        // Arrange
-        Long accountId = 1L;
-        String roleName = "PLAYER";
+        AccountEntity accountEntity = accountEntity();
+        Role existingRole = role(ADMIN_ROLE_ID, ADMIN);
+        Account account = accountWithRoles(existingRole);
 
-        AccountEntity accountEntity = new AccountEntity();
-        AccountBuilder accountBuilder = new AccountBuilder();
-        accountBuilder.email("juan@escuelaing.edu.co")
-                .passwordHash("encoded-password")
-                .id(1L)
-                .createdAt(LocalDateTime.now())
-                .addRole(new Role());
-        Account account = accountBuilder.build();
+        mockAccountLookup(accountEntity, account);
 
-        when(accountRepository.findById(accountId))
-                .thenReturn(Optional.of(accountEntity));
-
-        when(accountMapper.toModel(accountEntity))
-                .thenReturn(account);
-
-        when(roleRepository.findByNameIgnoreCase(roleName))
+        when(roleRepository.findByNameIgnoreCase(ADMIN))
                 .thenReturn(Optional.empty());
 
-        // Act
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> roleService.assignRole(accountId, roleName));
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> roleService.assignRole(ACCOUNT_ID, ADMIN)
+        );
 
-        // Assert
-        assertEquals("Role not found: PLAYER", ex.getMessage());
+        assertEquals("Role not found: ADMIN", ex.getMessage());
 
-        verify(accountRepository).findById(accountId);
-        verify(roleRepository).findByNameIgnoreCase(roleName);
+        verify(accountRepository).findById(ACCOUNT_ID);
+        verify(roleRepository).findByNameIgnoreCase(ADMIN);
         verify(accountRepository, never()).save(any());
     }
 
     @Test
     void removeRole_ShouldRemoveRoleAndSave_WhenRoleIsAssigned() {
-        // Arrange
-        Long accountId = 1L;
-        String roleName = "PLAYER";
+        AccountEntity accountEntity = accountEntity();
+        RoleEntity roleEntity = roleEntity(PLAYER_ROLE_ID, PLAYER);
+        Role role = role(PLAYER_ROLE_ID, PLAYER);
+        Account account = accountWithRoles(role);
 
-        AccountEntity accountEntity = new AccountEntity();
-        RoleEntity roleEntity = new RoleEntity();
-
-        Role role = new Role();
-        role.setId(10L);
-        role.setName("PLAYER");
-        AccountBuilder accountBuilder = new AccountBuilder();
-        accountBuilder.email("juan@escuelaing.edu.co")
-                .passwordHash("encoded-password")
-                .id(1L)
-                .createdAt(LocalDateTime.now())
-                .addRole(role);
-        Account account = accountBuilder.build();
-
-        when(accountRepository.findById(accountId))
-                .thenReturn(Optional.of(accountEntity));
-
-        when(accountMapper.toModel(accountEntity))
-                .thenReturn(account);
-
-        when(roleRepository.findByNameIgnoreCase(roleName))
-                .thenReturn(Optional.of(roleEntity));
-
-        when(roleMapper.toModel(roleEntity))
-                .thenReturn(role);
+        mockAccountLookup(accountEntity, account);
+        mockRoleLookup(PLAYER, roleEntity, role);
 
         when(accountMapper.toEntity(any(Account.class)))
                 .thenReturn(accountEntity);
 
-        // Act
-        roleService.removeRole(accountId, roleName);
+        roleService.removeRole(ACCOUNT_ID, PLAYER);
 
-        // Assert
-        verify(accountRepository).findById(accountId);
-        verify(roleRepository).findByNameIgnoreCase(roleName);
+        verify(accountRepository).findById(ACCOUNT_ID);
+        verify(roleRepository).findByNameIgnoreCase(PLAYER);
         verify(accountMapper).toEntity(account);
         verify(accountRepository).save(accountEntity);
 
@@ -198,249 +151,215 @@ class RoleServiceTest {
 
     @Test
     void removeRole_ShouldDoNothing_WhenRoleIsNotAssigned() {
-        // Arrange
-        Long accountId = 1L;
-        String roleName = "PLAYER";
+        AccountEntity accountEntity = accountEntity();
+        RoleEntity roleEntity = roleEntity(PLAYER_ROLE_ID, PLAYER);
+        Role role = role(PLAYER_ROLE_ID, PLAYER);
+        Role anotherRole = role(ADMIN_ROLE_ID, ADMIN);
+        Account account = accountWithRoles(anotherRole);
 
-        AccountEntity accountEntity = new AccountEntity();
-        RoleEntity roleEntity = new RoleEntity();
+        mockAccountLookup(accountEntity, account);
+        mockRoleLookup(PLAYER, roleEntity, role);
 
-        Role role = new Role();
-        role.setId(10L);
-        role.setName("PLAYER");
+        roleService.removeRole(ACCOUNT_ID, PLAYER);
 
-        Role anotherRole = new Role();
-        anotherRole.setId(20L);
-        anotherRole.setName("ADMIN");
-
-        AccountBuilder accountBuilder = new AccountBuilder();
-        accountBuilder.email("juan@escuelaing.edu.co")
-                .passwordHash("encoded-password")
-                .id(1L)
-                .createdAt(LocalDateTime.now())
-                .addRole(anotherRole);
-        Account account = accountBuilder.build();
-
-        when(accountRepository.findById(accountId))
-                .thenReturn(Optional.of(accountEntity));
-
-        when(accountMapper.toModel(accountEntity))
-                .thenReturn(account);
-
-        when(roleRepository.findByNameIgnoreCase(roleName))
-                .thenReturn(Optional.of(roleEntity));
-
-        when(roleMapper.toModel(roleEntity))
-                .thenReturn(role);
-
-        // Act
-        roleService.removeRole(accountId, roleName);
-
-        // Assert
-        verify(accountRepository).findById(accountId);
-        verify(roleRepository).findByNameIgnoreCase(roleName);
+        verify(accountRepository).findById(ACCOUNT_ID);
+        verify(roleRepository).findByNameIgnoreCase(PLAYER);
         verify(accountRepository, never()).save(any());
         verify(accountMapper, never()).toEntity(any());
 
-        assertEquals(1, account.getRoles().size());
-        assertEquals("ADMIN", account.getRoles().get(0).getName());
+        assertRoleNames(account.getRoles(), ADMIN);
     }
 
     @Test
     void getRolesByAccount_ShouldReturnRoles_WhenAccountHasRoles() {
-        // Arrange
-        Long accountId = 1L;
+        AccountEntity accountEntity = accountEntity();
 
-        AccountEntity accountEntity = new AccountEntity();
+        Role playerRole = role(PLAYER_ROLE_ID, PLAYER);
+        Role adminRole = role(ADMIN_ROLE_ID, ADMIN);
+        Account account = accountWithRoles(playerRole, adminRole);
 
-        Role role1 = new Role();
-        role1.setId(10L);
-        role1.setName("PLAYER");
+        mockAccountLookup(accountEntity, account);
 
-        Role role2 = new Role();
-        role2.setId(20L);
-        role2.setName("ADMIN");
+        List<Role> result = roleService.getRolesByAccount(ACCOUNT_ID);
 
-        AccountBuilder accountBuilder = new AccountBuilder();
-        accountBuilder.email("juan@escuelaing.edu.co")
-                .passwordHash("encoded-password")
-                .id(1L)
-                .createdAt(LocalDateTime.now())
-                .addRole(role1)
-                .addRole(role2);
-        Account account = accountBuilder.build();
-
-        when(accountRepository.findById(accountId))
-                .thenReturn(Optional.of(accountEntity));
-
-        when(accountMapper.toModel(accountEntity))
-                .thenReturn(account);
-
-        // Act
-        List<Role> result = roleService.getRolesByAccount(accountId);
-
-        // Assert
         assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals("PLAYER", result.get(0).getName());
-        assertEquals("ADMIN", result.get(1).getName());
+        assertRoleNames(result, PLAYER, ADMIN);
 
-        verify(accountRepository).findById(accountId);
+        verify(accountRepository).findById(ACCOUNT_ID);
         verify(accountMapper).toModel(accountEntity);
     }
 
-
     @Test
     void getPermissions_ShouldReturnPermissions_WhenRoleHasPermissions() {
-        // Arrange
-        Long roleId = 10L;
+        RoleEntity roleEntity = roleEntity(PLAYER_ROLE_ID, PLAYER);
+        Role role = roleWithPermissions(
+                PLAYER_ROLE_ID,
+                permission(READ),
+                permission(WRITE)
+        );
 
-        RoleEntity roleEntity = new RoleEntity();
+        mockRoleById(PLAYER_ROLE_ID, roleEntity, role);
 
-        Permission p1 = new Permission();
-        p1.setName("READ");
+        List<Permission> result = roleService.getPermissions(PLAYER_ROLE_ID);
 
-        Permission p2 = new Permission();
-        p2.setName("WRITE");
-
-        Role role = new Role();
-        role.setId(roleId);
-        role.setPermissions(List.of(p1, p2));
-
-        when(roleRepository.findById(roleId))
-                .thenReturn(Optional.of(roleEntity));
-
-        when(roleMapper.toModel(roleEntity))
-                .thenReturn(role);
-
-        // Act
-        List<Permission> result = roleService.getPermissions(roleId);
-
-        // Assert
         assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals("READ", result.get(0).getName());
-        assertEquals("WRITE", result.get(1).getName());
+        assertPermissionNames(result, READ, WRITE);
 
-        verify(roleRepository).findById(roleId);
+        verify(roleRepository).findById(PLAYER_ROLE_ID);
         verify(roleMapper).toModel(roleEntity);
     }
 
     @Test
     void getPermissions_ShouldReturnEmptyList_WhenRolePermissionsAreNull() {
-        // Arrange
-        Long roleId = 10L;
-
-        RoleEntity roleEntity = new RoleEntity();
-
-        Role role = new Role();
-        role.setId(roleId);
+        RoleEntity roleEntity = roleEntity(PLAYER_ROLE_ID, PLAYER);
+        Role role = roleWithPermissions(PLAYER_ROLE_ID);
         role.setPermissions(null);
 
-        when(roleRepository.findById(roleId))
-                .thenReturn(Optional.of(roleEntity));
+        mockRoleById(PLAYER_ROLE_ID, roleEntity, role);
 
-        when(roleMapper.toModel(roleEntity))
-                .thenReturn(role);
+        List<Permission> result = roleService.getPermissions(PLAYER_ROLE_ID);
 
-        // Act
-        List<Permission> result = roleService.getPermissions(roleId);
-
-        // Assert
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }
 
     @Test
     void hasPermission_ShouldReturnTrue_WhenPermissionExists() {
-        // Arrange
-        Long roleId = 10L;
+        RoleEntity roleEntity = roleEntity(PLAYER_ROLE_ID, PLAYER);
+        Role role = roleWithPermissions(
+                PLAYER_ROLE_ID,
+                permission(READ),
+                permission(WRITE)
+        );
 
-        RoleEntity roleEntity = new RoleEntity();
+        mockRoleById(PLAYER_ROLE_ID, roleEntity, role);
 
-        Permission read = new Permission();
-        read.setName("READ");
+        boolean result = roleService.hasPermission(PLAYER_ROLE_ID, "read");
 
-        Permission write = new Permission();
-        write.setName("WRITE");
-
-        Role role = new Role();
-        role.setId(roleId);
-        role.setPermissions(List.of(read, write));
-
-        when(roleRepository.findById(roleId))
-                .thenReturn(Optional.of(roleEntity));
-
-        when(roleMapper.toModel(roleEntity))
-                .thenReturn(role);
-
-        // Act
-        boolean result = roleService.hasPermission(roleId, "read");
-
-        // Assert
         assertTrue(result);
-        verify(roleRepository).findById(roleId);
+
+        verify(roleRepository).findById(PLAYER_ROLE_ID);
         verify(roleMapper).toModel(roleEntity);
     }
 
     @Test
     void hasPermission_ShouldReturnFalse_WhenPermissionDoesNotExist() {
-        // Arrange
-        Long roleId = 10L;
+        RoleEntity roleEntity = roleEntity(PLAYER_ROLE_ID, PLAYER);
+        Role role = roleWithPermissions(
+                PLAYER_ROLE_ID,
+                permission(READ)
+        );
 
-        RoleEntity roleEntity = new RoleEntity();
+        mockRoleById(PLAYER_ROLE_ID, roleEntity, role);
 
-        Permission read = new Permission();
-        read.setName("READ");
+        boolean result = roleService.hasPermission(PLAYER_ROLE_ID, DELETE);
 
-        Role role = new Role();
-        role.setId(roleId);
-        role.setPermissions(List.of(read));
-
-        when(roleRepository.findById(roleId))
-                .thenReturn(Optional.of(roleEntity));
-
-        when(roleMapper.toModel(roleEntity))
-                .thenReturn(role);
-
-        // Act
-        boolean result = roleService.hasPermission(roleId, "DELETE");
-
-        // Assert
         assertFalse(result);
     }
 
     @Test
     void getPermissions_ShouldThrowException_WhenRoleDoesNotExist() {
-        // Arrange
-        Long roleId = 999L;
-
-        when(roleRepository.findById(roleId))
+        when(roleRepository.findById(MISSING_ROLE_ID))
                 .thenReturn(Optional.empty());
 
-        // Act
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> roleService.getPermissions(roleId));
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> roleService.getPermissions(MISSING_ROLE_ID)
+        );
 
-        // Assert
         assertEquals("Role not found: id=999", ex.getMessage());
-        verify(roleRepository).findById(roleId);
+
+        verify(roleRepository).findById(MISSING_ROLE_ID);
     }
 
     @Test
     void getRolesByAccount_ShouldThrowException_WhenAccountDoesNotExist() {
-        // Arrange
-        Long accountId = 999L;
-
-        when(accountRepository.findById(accountId))
+        when(accountRepository.findById(MISSING_ACCOUNT_ID))
                 .thenReturn(Optional.empty());
 
-        // Act
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> roleService.getRolesByAccount(accountId));
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> roleService.getRolesByAccount(MISSING_ACCOUNT_ID)
+        );
 
-        // Assert
         assertEquals("Account not found with id: 999", ex.getMessage());
-        verify(accountRepository).findById(accountId);
+
+        verify(accountRepository).findById(MISSING_ACCOUNT_ID);
+    }
+
+    private Account accountWithRoles(Role... roles) {
+        return validAccount(EMAIL, roles);
+    }
+
+    private AccountEntity accountEntity() {
+        AccountEntity entity = new AccountEntity();
+        entity.setId(ACCOUNT_ID);
+        return entity;
+    }
+
+    private Role role(Long id, String name) {
+        Role role = new Role();
+        role.setId(id);
+        role.setName(name);
+        return role;
+    }
+
+    private RoleEntity roleEntity(Long id, String name) {
+        RoleEntity entity = new RoleEntity();
+        entity.setId(id);
+        entity.setName(name);
+        return entity;
+    }
+
+    private Permission permission(String name) {
+        Permission permission = new Permission();
+        permission.setName(name);
+        return permission;
+    }
+
+    private Role roleWithPermissions(Long id, Permission... permissions) {
+        Role role = role(id, PLAYER);
+        role.setPermissions(List.of(permissions));
+        return role;
+    }
+
+    private void mockAccountLookup(AccountEntity entity, Account account) {
+        when(accountRepository.findById(ACCOUNT_ID))
+                .thenReturn(Optional.of(entity));
+
+        when(accountMapper.toModel(entity))
+                .thenReturn(account);
+    }
+
+    private void mockRoleLookup(String roleName, RoleEntity entity, Role role) {
+        when(roleRepository.findByNameIgnoreCase(roleName))
+                .thenReturn(Optional.of(entity));
+
+        when(roleMapper.toModel(entity))
+                .thenReturn(role);
+    }
+
+    private void mockRoleById(Long roleId, RoleEntity entity, Role role) {
+        when(roleRepository.findById(roleId))
+                .thenReturn(Optional.of(entity));
+
+        when(roleMapper.toModel(entity))
+                .thenReturn(role);
+    }
+
+    private void assertRoleNames(List<Role> roles, String... expectedNames) {
+        assertEquals(expectedNames.length, roles.size());
+
+        for (int i = 0; i < expectedNames.length; i++) {
+            assertEquals(expectedNames[i], roles.get(i).getName());
+        }
+    }
+
+    private void assertPermissionNames(List<Permission> permissions, String... expectedNames) {
+        assertEquals(expectedNames.length, permissions.size());
+
+        for (int i = 0; i < expectedNames.length; i++) {
+            assertEquals(expectedNames[i], permissions.get(i).getName());
+        }
     }
 }

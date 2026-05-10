@@ -146,7 +146,7 @@ public class PermissionDataInitializer {
 
     @Bean
     @Order(1)
-    CommandLineRunner permissionInitializer(PermissionRepository permissionRepository) {
+    public CommandLineRunner permissionInitializer(PermissionRepository permissionRepository) {
         return args -> {
             Set<String> existingPermissionNames = permissionRepository.findAll().stream()
                     .map(PermissionEntity::getName)

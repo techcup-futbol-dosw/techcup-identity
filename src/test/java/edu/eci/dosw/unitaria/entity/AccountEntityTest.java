@@ -3,7 +3,7 @@ package edu.eci.dosw.unitaria.entity;
 import org.junit.jupiter.api.Test;
 
 import edu.eci.dosw.entity.AccountEntity;
-import edu.eci.dosw.entity.AccountStatus;
+import edu.eci.dosw.model.AccountStatus;
 import edu.eci.dosw.entity.RoleEntity;
 
 import java.time.LocalDateTime;
@@ -21,7 +21,7 @@ class AccountEntityTest {
 
         account.setId(1L);
         account.setEmail("juan@escuelaing.edu.co");
-        account.setPassword("encoded-password");
+        account.setPasswordHash("encoded-password");
         account.setStatus(AccountStatus.ACTIVE);
         account.setCreatedAt(now);
         account.setUpdatedAt(now);
@@ -29,7 +29,7 @@ class AccountEntityTest {
 
         assertEquals(1L, account.getId());
         assertEquals("juan@escuelaing.edu.co", account.getEmail());
-        assertEquals("encoded-password", account.getPassword());
+        assertEquals("encoded-password", account.getPasswordHash());
         assertEquals(AccountStatus.ACTIVE, account.getStatus());
         assertEquals(now, account.getCreatedAt());
         assertEquals(now, account.getUpdatedAt());

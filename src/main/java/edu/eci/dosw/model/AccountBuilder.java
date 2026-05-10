@@ -1,8 +1,8 @@
 package edu.eci.dosw.model;
 
-import edu.eci.dosw.entity.AccountStatus;
 import edu.eci.dosw.exception.InvalidAccountBuildException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,16 +10,60 @@ import java.util.List;
 public class AccountBuilder {
 
     private Long id;
+
+    private String name;
+    private String lastName;
+    private LocalDate birthDate;
+    private Relation relation;
+    private Integer semester;
+    private String program;
+
     private String email;
     private String passwordHash;
+
     private AccountStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime lastLoginAt;
+
+    private Gender gender;
+    private IdentificationType identificationType;
+    private String identification;
+
     private List<Role> roles = new ArrayList<>();
 
     public AccountBuilder id(Long id) {
         this.id = id;
+        return this;
+    }
+
+    public AccountBuilder name(String name) {
+        this.name = name;
+        return this;
+    }
+
+    public AccountBuilder lastName(String lastName) {
+        this.lastName = lastName;
+        return this;
+    }
+
+    public AccountBuilder birthDate(LocalDate birthDate) {
+        this.birthDate = birthDate;
+        return this;
+    }
+
+    public AccountBuilder relation(Relation relation) {
+        this.relation = relation;
+        return this;
+    }
+
+    public AccountBuilder semester(Integer semester) {
+        this.semester = semester;
+        return this;
+    }
+
+    public AccountBuilder program(String program) {
+        this.program = program;
         return this;
     }
 
@@ -53,6 +97,21 @@ public class AccountBuilder {
         return this;
     }
 
+    public AccountBuilder gender(Gender gender) {
+        this.gender = gender;
+        return this;
+    }
+
+    public AccountBuilder identificationType(IdentificationType identificationType) {
+        this.identificationType = identificationType;
+        return this;
+    }
+
+    public AccountBuilder identification(String identification) {
+        this.identification = identification;
+        return this;
+    }
+
     public AccountBuilder roles(List<Role> roles) {
         this.roles = roles != null ? new ArrayList<>(roles) : new ArrayList<>();
         return this;
@@ -70,36 +129,62 @@ public class AccountBuilder {
         setDefaultFields();
 
         return new Account(
-                id,
-                email,
-                passwordHash,
-                status,
+                birthDate,
                 createdAt,
-                updatedAt,
+                email,
+                gender,
+                id,
+                identification,
+                identificationType,
                 lastLoginAt,
-                new ArrayList<>(roles)
+                lastName,
+                name,
+                passwordHash,
+                program,
+                relation,
+                new ArrayList<>(roles),
+                semester,
+                status,
+                updatedAt
         );
     }
 
     private void validateRequiredFields() {
-        if (email == null || email.isBlank()) {
-            throw new InvalidAccountBuildException("Email is required");
-        }
+        requireNotBlank(name, "Name is required");
+        requireNotBlank(lastName, "Last name is required");
+        requireNotNull(birthDate, "Birth date is required");
+        requireNotNull(relation, "Relation is required");
+        requireNotNull(semester, "Semester is required");
+        requireNotBlank(program, "Program is required");
+        requireNotBlank(email, "Email is required");
+        requireNotBlank(passwordHash, "Password hash is required");
+        requireNotNull(createdAt, "CreatedAt is required");
+        requireNotNull(gender, "Gender is required");
+        requireNotNull(identificationType, "Identification type is required");
+        requireNotBlank(identification, "Identification is required");
+        requireNotEmpty(roles, "At least one role is required");
+    }
 
-        if (passwordHash == null || passwordHash.isBlank()) {
-            throw new InvalidAccountBuildException("Password hash is required");
-        }
-
-        if (createdAt == null) {
-            throw new InvalidAccountBuildException("CreatedAt is required");
-        }
-
-        if (roles == null || roles.isEmpty()) {
-            throw new InvalidAccountBuildException("At least one role is required");
+    private void requireNotBlank(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new InvalidAccountBuildException(message);
         }
     }
 
-    private void setDefaultFields() {
+    private void requireNotNull(Object value, String message) {
+        if (value == null) {
+            throw new InvalidAccountBuildException(message);
+        }
+    }
+
+
+    private void requireNotEmpty(List<?> value, String message) {
+        if (value == null || value.isEmpty()) {
+            throw new InvalidAccountBuildException(message);
+        }
+    }
+
+            private void setDefaultFields() {
         if (status == null) {
             status = AccountStatus.ACTIVE;
         }

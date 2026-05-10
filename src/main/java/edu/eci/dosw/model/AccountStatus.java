@@ -1,4 +1,4 @@
-package edu.eci.dosw.entity;
+package edu.eci.dosw.model;
 
 public enum AccountStatus {
     ACTIVE,
