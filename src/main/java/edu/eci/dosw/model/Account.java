@@ -45,23 +45,6 @@ public class Account {
         this.updatedAt = updatedAt;
     }
 
-    public Account(LocalDate birthDate, LocalDateTime createdAt, String email, Gender gender, String identification, IdentificationType identificationType, LocalDateTime lastLoginAt, String lastName, String name, String passwordHash, String program, Relation relation, List<Role> roles, Integer semester, LocalDateTime updatedAt) {
-        this.birthDate = birthDate;
-        this.createdAt = createdAt;
-        this.email = email;
-        this.gender = gender;
-        this.identification = identification;
-        this.identificationType = identificationType;
-        this.lastLoginAt = lastLoginAt;
-        this.lastName = lastName;
-        this.name = name;
-        this.passwordHash = passwordHash;
-        this.program = program;
-        this.relation = relation;
-        this.roles = roles != null ? new ArrayList<>(roles) : new ArrayList<>();
-        this.semester = semester;
-        this.updatedAt = updatedAt;
-    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
