@@ -1,15 +1,15 @@
 package edu.eci.dosw.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.eci.dosw.entity.AccountEntity;
-import edu.eci.dosw.model.Program;
 import edu.eci.dosw.dto.RegisterAccountRequest;
-import edu.eci.dosw.model.Relation;
-import edu.eci.dosw.model.AccountStatus;
+import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.entity.RoleEntity;
 import edu.eci.dosw.mapper.AccountMapper;
 import edu.eci.dosw.mapper.RoleMapper;
-import edu.eci.dosw.model.*;
+import edu.eci.dosw.model.Account;
+import edu.eci.dosw.model.AccountStatus;
+import edu.eci.dosw.model.Relation;
+import edu.eci.dosw.model.Role;
 import edu.eci.dosw.repository.AccountRepository;
 import edu.eci.dosw.repository.RefreshTokenRepository;
 import edu.eci.dosw.repository.RoleRepository;
@@ -24,9 +24,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,6 +41,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class AccountControllerIntegrationTest {
+
+    private static final String PLAYER = "PLAYER";
+    private static final String ADMIN = "ADMIN";
+
+    private static final String DEFAULT_PASSWORD = "Password123*";
+
+    private static final String ACCOUNT_READ_SELF = "account:read:self";
+    private static final String ACCOUNT_READ_ANY = "account:read:any";
+    private static final String ACCOUNT_DEACTIVATE_ANY = "account:deactivate:any";
+
+    private static final Long ADMIN_ACCOUNT_ID = 999L;
+    private static final Long MISSING_ACCOUNT_ID = 99999L;
+
+    private static final String REGISTER_PATH = "/accounts/register";
+    private static final String EXISTS_PATH = "/accounts/exists";
+    private static final String ACCOUNT_BY_ID_PATH = "/accounts/{id}";
+    private static final String DEACTIVATE_PATH = "/accounts/{id}/deactivate";
 
     @Autowired
     private MockMvc mockMvc;
@@ -79,15 +95,8 @@ class AccountControllerIntegrationTest {
         accountRepository.deleteAllInBatch();
         roleRepository.deleteAllInBatch();
 
-        playerRoleEntity = new RoleEntity();
-        playerRoleEntity.setName("PLAYER");
-        playerRoleEntity.setPermissions(new ArrayList<>());
-        playerRoleEntity = roleRepository.save(playerRoleEntity);
-
-        adminRoleEntity = new RoleEntity();
-        adminRoleEntity.setName("ADMIN");
-        adminRoleEntity.setPermissions(new ArrayList<>());
-        adminRoleEntity = roleRepository.save(adminRoleEntity);
+        playerRoleEntity = roleRepository.save(roleEntity(PLAYER));
+        adminRoleEntity = roleRepository.save(roleEntity(ADMIN));
     }
 
     // =========================================================
@@ -97,13 +106,12 @@ class AccountControllerIntegrationTest {
     @Test
     @DisplayName("Should register account successfully")
     void shouldRegisterAccountSuccessfully() throws Exception {
-        RegisterAccountRequest request = createValidRegisterRequest("juan@mail.escuelaing.edu.co");
+        String email = "juan@mail.escuelaing.edu.co";
+        RegisterAccountRequest request = validRegisterRequest(email);
 
-        mockMvc.perform(post("/accounts/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        performRegister(request)
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.email").value("juan@mail.escuelaing.edu.co"))
+                .andExpect(jsonPath("$.email").value(email))
                 .andExpect(jsonPath("$.status").value("ACTIVE"))
                 .andExpect(jsonPath("$.name").value("Juan"))
                 .andExpect(jsonPath("$.lastName").value("Roa"))
@@ -111,22 +119,18 @@ class AccountControllerIntegrationTest {
                 .andExpect(jsonPath("$.semester").value(7))
                 .andExpect(jsonPath("$.gender").value("MALE"));
 
-        assertThat(accountRepository.findByEmail("juan@mail.escuelaing.edu.co")).isPresent();
+        assertThat(accountRepository.findByEmail(email)).isPresent();
     }
 
     @Test
     @DisplayName("Should return 409 when email is already registered")
     void shouldReturnConflictWhenEmailAlreadyExists() throws Exception {
-        RegisterAccountRequest request = createValidRegisterRequest("juan@mail.escuelaing.edu.co");
+        RegisterAccountRequest request = validRegisterRequest("juan@mail.escuelaing.edu.co");
 
-        mockMvc.perform(post("/accounts/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        performRegister(request)
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/accounts/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        performRegister(request)
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.message").exists());
@@ -135,12 +139,10 @@ class AccountControllerIntegrationTest {
     @Test
     @DisplayName("Should return 400 when student semester is missing")
     void shouldReturnBadRequestWhenStudentSemesterIsMissing() throws Exception {
-        RegisterAccountRequest request = createValidRegisterRequest("maria@mail.escuelaing.edu.co");
+        RegisterAccountRequest request = validRegisterRequest("maria@mail.escuelaing.edu.co");
         request.setSemester(null);
 
-        mockMvc.perform(post("/accounts/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        performRegister(request)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.message").exists());
@@ -149,12 +151,10 @@ class AccountControllerIntegrationTest {
     @Test
     @DisplayName("Should return 400 when family email is not Gmail")
     void shouldReturnBadRequestWhenFamilyEmailIsNotGmail() throws Exception {
-        RegisterAccountRequest request = createValidRegisterRequest("family@mail.escuelaing.edu.co");
+        RegisterAccountRequest request = validRegisterRequest("family@mail.escuelaing.edu.co");
         request.setRelation(Relation.FAMILIAR);
 
-        mockMvc.perform(post("/accounts/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        performRegister(request)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.message").exists());
@@ -163,166 +163,179 @@ class AccountControllerIntegrationTest {
     @Test
     @DisplayName("Should return 400 when institutional email is invalid")
     void shouldReturnBadRequestWhenInstitutionalEmailIsInvalid() throws Exception {
-        RegisterAccountRequest request = createValidRegisterRequest("juan@gmail.com");
+        RegisterAccountRequest request = validRegisterRequest("juan@gmail.com");
         request.setRelation(Relation.ESTUDIANTE);
 
-        mockMvc.perform(post("/accounts/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        performRegister(request)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.message").exists());
     }
 
-        // =========================================================
-        // EXISTS BY EMAIL
-        // =========================================================
+    // =========================================================
+    // EXISTS BY EMAIL
+    // =========================================================
 
-        @Test
-        @DisplayName("Should return true when email exists")
-        void shouldReturnTrueWhenEmailExists () throws Exception {
-            createPersistedAccount("exists@mail.escuelaing.edu.co", playerRoleEntity);
+    @Test
+    @DisplayName("Should return true when email exists")
+    void shouldReturnTrueWhenEmailExists() throws Exception {
+        String email = "exists@mail.escuelaing.edu.co";
+        createPersistedAccount(email, playerRoleEntity);
 
-            mockMvc.perform(get("/accounts/exists")
-                            .param("email", "exists@mail.escuelaing.edu.co"))
-                    .andExpect(status().isOk())
-                    .andExpect(content().string("true"));
-        }
+        mockMvc.perform(get(EXISTS_PATH).param("email", email))
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
+    }
 
-        @Test
-        @DisplayName("Should return false when email does not exist")
-        void shouldReturnFalseWhenEmailDoesNotExist () throws Exception {
-            mockMvc.perform(get("/accounts/exists")
-                            .param("email", "missing@mail.escuelaing.edu.co"))
-                    .andExpect(status().isOk())
-                    .andExpect(content().string("false"));
-        }
+    @Test
+    @DisplayName("Should return false when email does not exist")
+    void shouldReturnFalseWhenEmailDoesNotExist() throws Exception {
+        mockMvc.perform(get(EXISTS_PATH).param("email", "missing@mail.escuelaing.edu.co"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("false"));
+    }
 
-        // =========================================================
-        // GET BY ID
-        // =========================================================
+    // =========================================================
+    // GET BY ID
+    // =========================================================
 
-        @Test
-        @DisplayName("Should allow self account read")
-        void shouldAllowSelfAccountRead () throws Exception {
-            var accountEntity = createPersistedAccount("self@mail.escuelaing.edu.co", playerRoleEntity);
+    @Test
+    @DisplayName("Should allow self account read")
+    void shouldAllowSelfAccountRead() throws Exception {
+        String email = "self@mail.escuelaing.edu.co";
+        AccountEntity accountEntity = createPersistedAccount(email, playerRoleEntity);
 
-            String token = jwtService.generateAccessToken(
-                    accountEntity.getId(),
-                    List.of("PLAYER"),
-                    List.of("account:read:self")
-            );
+        String token = accessToken(
+                accountEntity.getId(),
+                List.of(PLAYER),
+                List.of(ACCOUNT_READ_SELF)
+        );
 
-            mockMvc.perform(get("/accounts/{id}", accountEntity.getId())
-                            .header("Authorization", "Bearer " + token))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.email").value("self@mail.escuelaing.edu.co"));
-        }
+        mockMvc.perform(get(ACCOUNT_BY_ID_PATH, accountEntity.getId()).header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(email));
+    }
 
-        @Test
-        @DisplayName("Should allow admin to read any account")
-        void shouldAllowAdminToReadAnyAccount () throws Exception {
-            var accountEntity = createPersistedAccount("user@mail.escuelaing.edu.co", playerRoleEntity);
+    @Test
+    @DisplayName("Should allow admin to read any account")
+    void shouldAllowAdminToReadAnyAccount() throws Exception {
+        String email = "user@mail.escuelaing.edu.co";
+        AccountEntity accountEntity = createPersistedAccount(email, playerRoleEntity);
 
-            String token = jwtService.generateAccessToken(
-                    999L,
-                    List.of("ADMIN"),
-                    List.of("account:read:any")
-            );
+        String token = adminToken(ACCOUNT_READ_ANY);
 
-            mockMvc.perform(get("/accounts/{id}", accountEntity.getId())
-                            .header("Authorization", "Bearer " + token))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.email").value("user@mail.escuelaing.edu.co"));
-        }
+        mockMvc.perform(get(ACCOUNT_BY_ID_PATH, accountEntity.getId()).header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(email));
+    }
 
-        @Test
-        @DisplayName("Should return 403 when user tries to read another account without read:any")
-        void shouldReturnForbiddenWhenReadingAnotherAccountWithoutPermission () throws Exception {
-            var ownerAccount = createPersistedAccount("owner@mail.escuelaing.edu.co", playerRoleEntity);
-            var otherAccount = createPersistedAccount("other@mail.escuelaing.edu.co", playerRoleEntity);
+    @Test
+    @DisplayName("Should return 403 when user tries to read another account without read:any")
+    void shouldReturnForbiddenWhenReadingAnotherAccountWithoutPermission() throws Exception {
+        AccountEntity ownerAccount = createPersistedAccount("owner@mail.escuelaing.edu.co", playerRoleEntity);
+        AccountEntity otherAccount = createPersistedAccount("other@mail.escuelaing.edu.co", playerRoleEntity);
 
-            String token = jwtService.generateAccessToken(
-                    ownerAccount.getId(),
-                    List.of("PLAYER"),
-                    List.of("account:read:self")
-            );
+        String token = accessToken(
+                ownerAccount.getId(),
+                List.of(PLAYER),
+                List.of(ACCOUNT_READ_SELF)
+        );
 
-            mockMvc.perform(get("/accounts/{id}", otherAccount.getId())
-                            .header("Authorization", "Bearer " + token))
-                    .andExpect(status().isForbidden());
-        }
+        mockMvc.perform(get(ACCOUNT_BY_ID_PATH, otherAccount.getId()).header("Authorization", bearer(token)))
+                .andExpect(status().isForbidden());
+    }
 
-        @Test
-        @DisplayName("Should return 404 when account does not exist")
-        void shouldReturnNotFoundWhenAccountDoesNotExist () throws Exception {
-            String token = jwtService.generateAccessToken(
-                    999L,
-                    List.of("ADMIN"),
-                    List.of("account:read:any")
-            );
+    @Test
+    @DisplayName("Should return 404 when account does not exist")
+    void shouldReturnNotFoundWhenAccountDoesNotExist() throws Exception {
+        String token = adminToken(ACCOUNT_READ_ANY);
 
-            mockMvc.perform(get("/accounts/{id}", 99999L)
-                            .header("Authorization", "Bearer " + token))
-                    .andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.status").value(404));
-        }
+        mockMvc.perform(get(ACCOUNT_BY_ID_PATH, MISSING_ACCOUNT_ID).header("Authorization", bearer(token)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
+    }
 
-        // =========================================================
-        // DEACTIVATE
-        // =========================================================
+    // =========================================================
+    // DEACTIVATE
+    // =========================================================
 
-        @Test
-        @DisplayName("Should deactivate account when caller has permission")
-        void shouldDeactivateAccountWhenCallerHasPermission () throws Exception {
-            var accountEntity = createPersistedAccount("deactivate@mail.escuelaing.edu.co", playerRoleEntity);
+    @Test
+    @DisplayName("Should deactivate account when caller has permission")
+    void shouldDeactivateAccountWhenCallerHasPermission() throws Exception {
+        AccountEntity accountEntity = createPersistedAccount(
+                "deactivate@mail.escuelaing.edu.co",
+                playerRoleEntity
+        );
 
-            String token = jwtService.generateAccessToken(
-                    999L,
-                    List.of("ADMIN"),
-                    List.of("account:deactivate:any")
-            );
+        String token = adminToken(ACCOUNT_DEACTIVATE_ANY);
 
-            mockMvc.perform(patch("/accounts/{id}/deactivate", accountEntity.getId())
-                            .header("Authorization", "Bearer " + token))
-                    .andExpect(status().isNoContent());
+        mockMvc.perform(patch(DEACTIVATE_PATH, accountEntity.getId()).header("Authorization", bearer(token)))
+                .andExpect(status().isNoContent());
 
-            var updated = accountRepository.findById(accountEntity.getId()).orElseThrow();
-            assertThat(updated.getStatus()).isEqualTo(AccountStatus.INACTIVE);
-        }
+        AccountEntity updated = accountRepository.findById(accountEntity.getId()).orElseThrow();
+        assertThat(updated.getStatus()).isEqualTo(AccountStatus.INACTIVE);
+    }
 
-        @Test
-        @DisplayName("Should return 403 when caller tries to deactivate without permission")
-        void shouldReturnForbiddenWhenDeactivatingWithoutPermission () throws Exception {
-            var accountEntity = createPersistedAccount("nodeactivate@mail.escuelaing.edu.co", playerRoleEntity);
+    @Test
+    @DisplayName("Should return 403 when caller tries to deactivate without permission")
+    void shouldReturnForbiddenWhenDeactivatingWithoutPermission() throws Exception {
+        AccountEntity accountEntity = createPersistedAccount(
+                "nodeactivate@mail.escuelaing.edu.co",
+                playerRoleEntity
+        );
 
-            String token = jwtService.generateAccessToken(
-                    999L,
-                    List.of("PLAYER"),
-                    List.of("account:read:self")
-            );
+        String token = accessToken(
+                ADMIN_ACCOUNT_ID,
+                List.of(PLAYER),
+                List.of(ACCOUNT_READ_SELF)
+        );
 
-            mockMvc.perform(patch("/accounts/{id}/deactivate", accountEntity.getId())
-                            .header("Authorization", "Bearer " + token))
-                    .andExpect(status().isForbidden());
-        }
+        mockMvc.perform(patch(DEACTIVATE_PATH, accountEntity.getId()).header("Authorization", bearer(token)))
+                .andExpect(status().isForbidden());
+    }
 
-        // =========================================================
-        // HELPERS
-        // =========================================================
+    // =========================================================
+    // HELPERS
+    // =========================================================
+
+    private ResultActions performRegister(RegisterAccountRequest request) throws Exception {
+        return mockMvc.perform(post(REGISTER_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)));
+    }
 
     private AccountEntity createPersistedAccount(String email, RoleEntity roleEntity) {
         Role roleModel = roleMapper.toModel(roleEntity);
 
         Account account = validAccountBuilder(email)
-                .passwordHash(passwordEncoder.encode("Password123*"))
+                .passwordHash(passwordEncoder.encode(DEFAULT_PASSWORD))
                 .status(AccountStatus.ACTIVE)
                 .addRole(roleModel)
                 .build();
 
         return accountRepository.save(accountMapper.toEntity(account));
     }
-    private RegisterAccountRequest createValidRegisterRequest (String email){
-        return validRegisterRequest(email);
+
+    private RoleEntity roleEntity(String roleName) {
+        RoleEntity roleEntity = new RoleEntity();
+        roleEntity.setName(roleName);
+        roleEntity.setPermissions(new ArrayList<>());
+        return roleEntity;
+    }
+
+    private String adminToken(String permission) {
+        return accessToken(
+                ADMIN_ACCOUNT_ID,
+                List.of(ADMIN),
+                List.of(permission)
+        );
+    }
+
+    private String accessToken(Long accountId, List<String> roles, List<String> permissions) {
+        return jwtService.generateAccessToken(accountId, roles, permissions);
+    }
+
+    private String bearer(String token) {
+        return "Bearer " + token;
     }
 }
