@@ -109,8 +109,8 @@ public class RoleDataInitializer {
 
     @Bean
     @Order(2)
-    CommandLineRunner roleInitializer(RoleRepository roleRepository,
-                                      PermissionRepository permissionRepository) {
+    public CommandLineRunner roleInitializer(RoleRepository roleRepository,
+                                             PermissionRepository permissionRepository) {
         return args -> {
             Map<String, PermissionEntity> permissionMap = permissionRepository.findAll().stream()
                     .collect(Collectors.toMap(
