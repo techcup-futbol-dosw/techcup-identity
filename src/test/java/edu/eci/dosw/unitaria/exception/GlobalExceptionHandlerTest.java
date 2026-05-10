@@ -17,6 +17,20 @@ import static org.mockito.Mockito.*;
 
 class GlobalExceptionHandlerTest {
 
+
+    private static final int BAD_REQUEST = 400;
+    private static final int UNAUTHORIZED = 401;
+    private static final int NOT_FOUND = 404;
+    private static final int CONFLICT = 409;
+    private static final int INTERNAL_SERVER_ERROR = 500;
+
+    private static final String BAD_REQUEST_ERROR = "Bad Request";
+    private static final String UNAUTHORIZED_ERROR = "Unauthorized";
+    private static final String NOT_FOUND_ERROR = "Not Found";
+    private static final String CONFLICT_ERROR = "Conflict";
+    private static final String INTERNAL_SERVER_ERROR_NAME = "Internal Server Error";
+    private static final String REQUEST_PATH = "/test";
+
     private GlobalExceptionHandler handler;
     private HttpServletRequest request;
 
@@ -25,135 +39,138 @@ class GlobalExceptionHandlerTest {
         handler = new GlobalExceptionHandler();
         request = mock(HttpServletRequest.class);
 
-        when(request.getRequestURI())
-                .thenReturn("/test");
+        when(request.getRequestURI()).thenReturn(REQUEST_PATH);
     }
 
-    @Test
-    void handleBadRequestExceptions_ShouldReturnBadRequest() {
-
-        InvalidRegistrationDataException exception =
-                new InvalidRegistrationDataException("Invalid data");
-
-        ResponseEntity<ApiErrorResponse> response =
-                handler.handleBadRequestExceptions(exception, request);
-
-        assertEquals(400, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-
-        assertEquals(
-                "Invalid data",
-                response.getBody().getMessage()
-        );
-    }
-
-    @Test
-    void handleConflictExceptions_ShouldReturnConflict() {
-
-        EmailAlreadyRegisteredException exception =
-                new EmailAlreadyRegisteredException("Email exists");
-
-        ResponseEntity<ApiErrorResponse> response =
-                handler.handleConflictExceptions(exception, request);
-
-        assertEquals(409, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-
-        assertEquals(
-                "Email already registered: Email exists",
-                response.getBody().getMessage()
-        );
-    }
 
     @Test
     void handleNotFoundExceptions_ShouldReturnNotFound() {
-
         AccountNotFoundException exception =
                 new AccountNotFoundException(1L);
 
         ResponseEntity<ApiErrorResponse> response =
                 handler.handleNotFoundExceptions(exception, request);
 
-        assertEquals(404, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-        assertEquals(
-                "Account not found with id: 1",
-                response.getBody().getMessage()
+        assertErrorResponse(
+                response,
+                NOT_FOUND,
+                NOT_FOUND_ERROR,
+                "Account not found with id: 1"
         );
     }
 
     @Test
     void handleUnauthorizedExceptions_ShouldReturnUnauthorized() {
-
         InvalidCredentialsException exception =
                 new InvalidCredentialsException();
 
         ResponseEntity<ApiErrorResponse> response =
                 handler.handleUnauthorizedExceptions(exception, request);
 
-        assertEquals(401, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-
-        assertEquals(
-                "Invalid credentials",
-                response.getBody().getMessage()
+        assertErrorResponse(
+                response,
+                UNAUTHORIZED,
+                UNAUTHORIZED_ERROR,
+                "Invalid credentials"
         );
     }
 
     @Test
     void handleDataIntegrityViolation_ShouldReturnConflict() {
-
         DataIntegrityViolationException exception =
                 new DataIntegrityViolationException("DB error");
 
         ResponseEntity<ApiErrorResponse> response =
                 handler.handleDataIntegrityViolation(exception, request);
 
-        assertEquals(409, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-
-        assertEquals(
-                "Database integrity violation",
-                response.getBody().getMessage()
+        assertErrorResponse(
+                response,
+                CONFLICT,
+                CONFLICT_ERROR,
+                "Database integrity violation"
         );
     }
 
     @Test
     void handleBusinessException_ShouldReturnBadRequest() {
-
         BusinessException exception =
                 new BusinessException("Business error");
 
         ResponseEntity<ApiErrorResponse> response =
                 handler.handleBusinessException(exception, request);
 
-        assertEquals(400, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-
-        assertEquals(
-                "Business error",
-                response.getBody().getMessage()
+        assertErrorResponse(
+                response,
+                BAD_REQUEST,
+                BAD_REQUEST_ERROR,
+                "Business error"
         );
     }
 
     @Test
     void handleGenericException_ShouldReturnInternalServerError() {
-
         Exception exception = new Exception("Unexpected");
 
         ResponseEntity<ApiErrorResponse> response =
                 handler.handleGenericException(exception, request);
 
-        assertEquals(500, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-
-        assertEquals(
-                "An unexpected error occurred",
-                response.getBody().getMessage()
+        assertErrorResponse(
+                response,
+                INTERNAL_SERVER_ERROR,
+                INTERNAL_SERVER_ERROR_NAME,
+                "An unexpected error occurred"
         );
     }
+
     @Test
     void handleValidationException_ShouldReturnBadRequestWithFieldErrorMessage() {
+        MethodArgumentNotValidException exception =
+                validationExceptionWithFieldError("birthDate", "Birth date must be in the past");
+
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleValidationException(exception, request);
+
+        assertErrorResponse(
+                response,
+                BAD_REQUEST,
+                BAD_REQUEST_ERROR,
+                "Birth date must be in the past"
+        );
+    }
+
+    @Test
+    void handleValidationException_ShouldReturnDefaultMessage_WhenNoFieldErrorsExist() {
+        MethodArgumentNotValidException exception =
+                validationExceptionWithoutFieldErrors();
+
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleValidationException(exception, request);
+
+        assertErrorResponse(
+                response,
+                BAD_REQUEST,
+                BAD_REQUEST_ERROR,
+                "Invalid request data"
+        );
+    }
+
+    private void assertErrorResponse(ResponseEntity<ApiErrorResponse> response,
+                                     int expectedStatus,
+                                     String expectedError,
+                                     String expectedMessage) {
+        assertEquals(expectedStatus, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+
+        ApiErrorResponse body = response.getBody();
+
+        assertEquals(expectedStatus, body.getStatus());
+        assertEquals(expectedError, body.getError());
+        assertEquals(expectedMessage, body.getMessage());
+        assertEquals(REQUEST_PATH, body.getPath());
+    }
+
+    private MethodArgumentNotValidException validationExceptionWithFieldError(String fieldName,
+                                                                              String message) {
         MethodArgumentNotValidException exception =
                 mock(MethodArgumentNotValidException.class);
 
@@ -161,36 +178,17 @@ class GlobalExceptionHandlerTest {
 
         FieldError fieldError = new FieldError(
                 "registerAccountRequest",
-                "birthDate",
-                "Birth date must be in the past"
+                fieldName,
+                message
         );
 
         when(exception.getBindingResult()).thenReturn(bindingResult);
         when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError));
 
-        ResponseEntity<ApiErrorResponse> response =
-                handler.handleValidationException(exception, request);
-
-        assertEquals(400, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-
-        assertEquals(
-                "Birth date must be in the past",
-                response.getBody().getMessage()
-        );
-
-        assertEquals(
-                "/test",
-                response.getBody().getPath()
-        );
-
-        assertEquals(
-                "Bad Request",
-                response.getBody().getError()
-        );
+        return exception;
     }
-    @Test
-    void handleValidationException_ShouldReturnDefaultMessage_WhenNoFieldErrorsExist() {
+
+    private MethodArgumentNotValidException validationExceptionWithoutFieldErrors() {
         MethodArgumentNotValidException exception =
                 mock(MethodArgumentNotValidException.class);
 
@@ -199,25 +197,34 @@ class GlobalExceptionHandlerTest {
         when(exception.getBindingResult()).thenReturn(bindingResult);
         when(bindingResult.getFieldErrors()).thenReturn(List.of());
 
+        return exception;
+    }
+
+
+    @Test
+    void handleBadRequestExceptions_ShouldReturnBadRequest() {
+        InvalidRegistrationDataException exception =
+                new InvalidRegistrationDataException("Invalid data");
+
         ResponseEntity<ApiErrorResponse> response =
-                handler.handleValidationException(exception, request);
+                handler.handleBadRequestExceptions(exception, request);
 
-        assertEquals(400, response.getStatusCode().value());
-        assertNotNull(response.getBody());
+        assertErrorResponse(response, BAD_REQUEST, BAD_REQUEST_ERROR, "Invalid data");
+    }
 
-        assertEquals(
-                "Invalid request data",
-                response.getBody().getMessage()
-        );
+    @Test
+    void handleConflictExceptions_ShouldReturnConflict() {
+        EmailAlreadyRegisteredException exception =
+                new EmailAlreadyRegisteredException("Email exists");
 
-        assertEquals(
-                "/test",
-                response.getBody().getPath()
-        );
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleConflictExceptions(exception, request);
 
-        assertEquals(
-                "Bad Request",
-                response.getBody().getError()
+        assertErrorResponse(
+                response,
+                CONFLICT,
+                CONFLICT_ERROR,
+                "Email already registered: Email exists"
         );
     }
 }
