@@ -1,4 +1,4 @@
-package edu.eci.dosw.dto;
+package edu.eci.dosw.model;
 
 public enum Relation {
     ESTUDIANTE,

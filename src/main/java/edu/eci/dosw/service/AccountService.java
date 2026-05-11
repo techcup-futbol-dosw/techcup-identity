@@ -2,9 +2,9 @@ package edu.eci.dosw.service;
 
 import edu.eci.dosw.dto.AccountResponse;
 import edu.eci.dosw.dto.RegisterAccountRequest;
-import edu.eci.dosw.dto.Relation;
+import edu.eci.dosw.model.Relation;
 import edu.eci.dosw.entity.*;
-import edu.eci.dosw.entity.AccountStatus;
+import edu.eci.dosw.model.AccountStatus;
 import edu.eci.dosw.exception.*;
 import edu.eci.dosw.mapper.*;
 import edu.eci.dosw.model.*;
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 
 @Service
@@ -67,6 +66,12 @@ public class AccountService {
     }
 
     @Transactional
+    public AccountResponse findByEmail(String email) {
+        Account account= findAccountByEmailOrThrow(email);
+        return accountMapper.toResponse(account);
+    }
+
+    @Transactional
     public void deactivate(Long accountId) {
         Account account = findAccountByIdOrThrow(accountId);
 
@@ -94,6 +99,12 @@ public class AccountService {
         AccountEntity accountEntity = accountRepository.findById(accountId)
                 .orElseThrow(() -> new AccountNotFoundException(accountId));
 
+        return accountMapper.toModel(accountEntity);
+    }
+
+    private Account findAccountByEmailOrThrow(String email) {
+        AccountEntity accountEntity = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new AccountNotFoundException(email));
         return accountMapper.toModel(accountEntity);
     }
 
@@ -140,9 +151,20 @@ public class AccountService {
         LocalDateTime now = LocalDateTime.now();
 
         return new AccountBuilder()
+                .name(request.getName())
+                .lastName(request.getLastName())
+                .birthDate(request.getBirthDate())
+                .relation(request.getRelation())
+                .semester(request.getSemester())
+                .program(request.getProgram().name())
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .gender(request.getGender())
+                .identificationType(request.getIdentificationType())
+                .identification(request.getIdentification())
+                .status(AccountStatus.ACTIVE)
                 .createdAt(now)
+                .updatedAt(now)
                 .addRole(playerRole)
                 .build();
     }

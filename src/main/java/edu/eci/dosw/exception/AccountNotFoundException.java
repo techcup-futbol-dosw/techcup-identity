@@ -10,4 +10,7 @@ public class AccountNotFoundException extends BusinessException {
     public AccountNotFoundException(Long accountId) {
         super("Account not found with id: " + accountId);
     }
+    public AccountNotFoundException(String email) {
+        super("Account not found with email: " + email);
+    }
 }
