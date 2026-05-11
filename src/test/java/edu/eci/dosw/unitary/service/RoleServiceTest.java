@@ -1,5 +1,6 @@
-package edu.eci.dosw.unitaria.service;
+package edu.eci.dosw.unitary.service;
 
+import edu.eci.dosw.dto.RoleSummaryResponse;
 import edu.eci.dosw.mapper.AccountMapper;
 import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.mapper.RoleMapper;
@@ -14,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -287,6 +289,46 @@ class RoleServiceTest {
         verify(accountRepository).findById(MISSING_ACCOUNT_ID);
     }
 
+    @Test
+    void getAllRoles_ShouldReturnAllRolesAsSummaryResponses() {
+        RoleEntity playerEntity = roleEntity(1L, PLAYER);
+        RoleEntity adminEntity = roleEntity(2L, ADMIN);
+
+        Role playerRole = role(1L, PLAYER);
+        Role adminRole = role(2L, ADMIN);
+
+        RoleSummaryResponse playerResponse = roleSummaryResponse(1L, PLAYER);
+        RoleSummaryResponse adminResponse = roleSummaryResponse(2L, ADMIN);
+
+        when(roleRepository.findAll())
+                .thenReturn(List.of(playerEntity, adminEntity));
+
+        when(roleMapper.toModel(playerEntity))
+                .thenReturn(playerRole);
+
+        when(roleMapper.toModel(adminEntity))
+                .thenReturn(adminRole);
+
+        when(roleMapper.toSummaryResponse(playerRole))
+                .thenReturn(playerResponse);
+
+        when(roleMapper.toSummaryResponse(adminRole))
+                .thenReturn(adminResponse);
+
+        List<RoleSummaryResponse> result = roleService.getAllRoles();
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals(ADMIN, result.get(0).getName());
+        assertEquals(PLAYER, result.get(1).getName());
+
+        verify(roleRepository).findAll();
+        verify(roleMapper).toModel(playerEntity);
+        verify(roleMapper).toModel(adminEntity);
+        verify(roleMapper).toSummaryResponse(playerRole);
+        verify(roleMapper).toSummaryResponse(adminRole);
+    }
+
     private Account accountWithRoles(Role... roles) {
         return validAccount(EMAIL, roles);
     }
@@ -361,5 +403,12 @@ class RoleServiceTest {
         for (int i = 0; i < expectedNames.length; i++) {
             assertEquals(expectedNames[i], permissions.get(i).getName());
         }
+    }
+
+    private RoleSummaryResponse roleSummaryResponse(Long id, String name) {
+        RoleSummaryResponse response = new RoleSummaryResponse();
+        response.setId(id);
+        response.setName(name);
+        return response;
     }
 }

@@ -1,8 +1,9 @@
-package edu.eci.dosw.unitaria.controller;
+package edu.eci.dosw.unitary.controller;
 
 import edu.eci.dosw.controller.RoleController;
 import edu.eci.dosw.dto.AssignRoleRequest;
 import edu.eci.dosw.dto.RemoveRoleRequest;
+import edu.eci.dosw.dto.RoleSummaryResponse;
 import edu.eci.dosw.model.Permission;
 import edu.eci.dosw.model.Role;
 import edu.eci.dosw.service.RoleService;
@@ -221,6 +222,24 @@ class RoleControllerTest {
 
         assertEquals(ROLE_NOT_FOUND, ex.getMessage());
         verify(roleService).getPermissions(MISSING_ACCOUNT_ID);
+    }
+
+    @Test
+    void getAllRoles_ShouldReturnOk_WhenRolesExist() {
+        RoleSummaryResponse player = new RoleSummaryResponse(1L, "PLAYER");
+        RoleSummaryResponse admin = new RoleSummaryResponse(2L, "ADMIN");
+
+        when(roleService.getAllRoles()).thenReturn(List.of(player, admin));
+
+        ResponseEntity<List<RoleSummaryResponse>> result = roleController.getAllRoles();
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertNotNull(result.getBody());
+        assertEquals(2, result.getBody().size());
+        assertEquals("PLAYER", result.getBody().get(0).getName());
+        assertEquals("ADMIN", result.getBody().get(1).getName());
+
+        verify(roleService).getAllRoles();
     }
 
     private AssignRoleRequest assignRoleRequest(Long accountId, String roleName) {

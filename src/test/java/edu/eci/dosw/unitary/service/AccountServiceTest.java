@@ -1,11 +1,14 @@
-package edu.eci.dosw.unitaria.service;
+package edu.eci.dosw.unitary.service;
+import edu.eci.dosw.dto.*;
 import edu.eci.dosw.exception.*;
+import edu.eci.dosw.model.AccountStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
@@ -18,8 +21,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 
-import edu.eci.dosw.dto.AccountResponse;
-import edu.eci.dosw.dto.RegisterAccountRequest;
 import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.entity.RoleEntity;
 import edu.eci.dosw.mapper.AccountMapper;
@@ -326,6 +327,178 @@ class AccountServiceTest {
         verify(accountRepository).findByEmail(EMAIL);
     }
 
+    @Test
+    void searchAccounts_ShouldReturnMappedPage_WhenRepositoryReturnsResults() {
+        AccountAdminSearchCriteria criteria = createAccountAdminSearchCriteria("juan", "PLAYER", AccountStatus.ACTIVE,0,10,"name,asc");
+        AccountEntity entity = createAccountEntity(1L);
+        Role role = createRole(5L,"PLAYER");
+        Account model = createAccountModel("juan@escuelaing.edu.co","password123",role);
+
+        AccountAdminItemResponse itemResponse = createAccountAdminItemResponse(1L,"Juan Perez", "juan@escuelaing.edu.co",List.of("PLAYER"));
+
+        Page<AccountEntity> accountPage = new PageImpl<>(
+                List.of(entity),
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "name")),
+                1
+        );
+
+
+        when(accountRepository.searchForAdmin(
+                eq("juan"),
+                eq("player"),
+                eq(AccountStatus.ACTIVE),
+                any(Pageable.class)
+        )).thenReturn(accountPage);
+
+        when(accountMapper.toModel(entity)).thenReturn(model);
+        when(accountMapper.toAdminItemResponse(model)).thenReturn(itemResponse);
+
+        AccountAdminPageResponse result = accountService.searchAccounts(criteria);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertEquals(0, result.getPage());
+        assertEquals(10, result.getSize());
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getTotalPages());
+
+        AccountAdminItemResponse row = result.getContent().get(0);
+        assertEquals(1L, row.getId());
+        assertEquals("Juan Perez", row.getFullName());
+        assertEquals("juan@escuelaing.edu.co", row.getEmail());
+        assertEquals(List.of("PLAYER"), row.getRoles());
+
+        verify(accountRepository).searchForAdmin(
+                eq("juan"),
+                eq("player"),
+                eq(AccountStatus.ACTIVE),
+                any(Pageable.class)
+        );
+        verify(accountMapper).toModel(entity);
+        verify(accountMapper).toAdminItemResponse(model);
+    }
+
+    @Test
+    void searchAccounts_ShouldUseDefaultPagingAndSort_WhenCriteriaDoesNotProvideThem() {
+        AccountAdminSearchCriteria criteria =
+                createAccountAdminSearchCriteria(null, null, null, null, null, null);
+
+        Page<AccountEntity> emptyPage = new PageImpl<>(
+                List.of(),
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "name")),
+                0
+        );
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        when(accountRepository.searchForAdmin(
+                isNull(),
+                isNull(),
+                isNull(),
+                any(Pageable.class)
+        )).thenReturn(emptyPage);
+
+        AccountAdminPageResponse result = accountService.searchAccounts(criteria);
+
+        assertNotNull(result);
+        assertTrue(result.getContent().isEmpty());
+        assertEquals(0, result.getPage());
+        assertEquals(10, result.getSize());
+        assertEquals(0, result.getTotalElements());
+        assertEquals(0, result.getTotalPages());
+
+        verify(accountRepository).searchForAdmin(
+                isNull(),
+                isNull(),
+                isNull(),
+                pageableCaptor.capture()
+        );
+
+        Pageable pageable = pageableCaptor.getValue();
+        assertEquals(0, pageable.getPageNumber());
+        assertEquals(10, pageable.getPageSize());
+        assertEquals(Sort.by(Sort.Direction.ASC, "name"), pageable.getSort());
+    }
+
+    @Test
+    void searchAccounts_ShouldNormalizeQueryAndRole_WhenFiltersAreProvided() {
+        AccountAdminSearchCriteria criteria =
+                createAccountAdminSearchCriteria("   JUAN   ", "   ADMIN   ", AccountStatus.ACTIVE, 1, 5, "email,desc");
+
+        Page<AccountEntity> emptyPage = new PageImpl<>(
+                List.of(),
+                PageRequest.of(1, 5, Sort.by(Sort.Direction.DESC, "email")),
+                0
+        );
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        when(accountRepository.searchForAdmin(
+                eq("juan"),
+                eq("admin"),
+                eq(AccountStatus.ACTIVE),
+                any(Pageable.class)
+        )).thenReturn(emptyPage);
+
+        AccountAdminPageResponse result = accountService.searchAccounts(criteria);
+
+        assertNotNull(result);
+        assertTrue(result.getContent().isEmpty());
+        assertEquals(1, result.getPage());
+        assertEquals(5, result.getSize());
+        assertEquals(0, result.getTotalElements());
+        assertEquals(0, result.getTotalPages());
+
+        verify(accountRepository).searchForAdmin(
+                eq("juan"),
+                eq("admin"),
+                eq(AccountStatus.ACTIVE),
+                pageableCaptor.capture()
+        );
+
+        Pageable pageable = pageableCaptor.getValue();
+        assertEquals(1, pageable.getPageNumber());
+        assertEquals(5, pageable.getPageSize());
+        assertEquals(Sort.by(Sort.Direction.DESC, "email"), pageable.getSort());
+    }
+
+    @Test
+    void searchAccounts_ShouldReturnEmptyPage_WhenRepositoryReturnsNoResults() {
+        AccountAdminSearchCriteria criteria =
+                createAccountAdminSearchCriteria("nadie", null, null, 0, 10, "name,asc");
+
+        Page<AccountEntity> emptyPage = new PageImpl<>(
+                List.of(),
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "name")),
+                0
+        );
+
+        when(accountRepository.searchForAdmin(
+                eq("nadie"),
+                isNull(),
+                isNull(),
+                any(Pageable.class)
+        )).thenReturn(emptyPage);
+
+        AccountAdminPageResponse result = accountService.searchAccounts(criteria);
+
+        assertNotNull(result);
+        assertNotNull(result.getContent());
+        assertTrue(result.getContent().isEmpty());
+        assertEquals(0, result.getPage());
+        assertEquals(10, result.getSize());
+        assertEquals(0, result.getTotalElements());
+        assertEquals(0, result.getTotalPages());
+
+        verify(accountRepository).searchForAdmin(
+                eq("nadie"),
+                isNull(),
+                isNull(),
+                any(Pageable.class)
+        );
+        verify(accountMapper, never()).toModel(any());
+        verify(accountMapper, never()).toAdminItemResponse(any());
+    }
     private Account captureBuiltAccount() {
         ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
         verify(accountMapper).toEntity(accountCaptor.capture());
@@ -362,5 +535,25 @@ class AccountServiceTest {
         role.setId(id);
         role.setName(roleName);
         return role;
+    }
+
+    private AccountAdminSearchCriteria createAccountAdminSearchCriteria(String query, String role, AccountStatus status, Integer page, Integer size, String sort){
+        AccountAdminSearchCriteria criteria = new AccountAdminSearchCriteria();
+        criteria.setQuery(query);
+        criteria.setRole(role);
+        criteria.setStatus(status);
+        criteria.setPage(page);
+        criteria.setSize(size);
+        criteria.setSort(sort);
+        return criteria;
+    }
+
+    private AccountAdminItemResponse createAccountAdminItemResponse (Long id, String fullName, String email, List<String> roles){
+        AccountAdminItemResponse itemResponse = new AccountAdminItemResponse();
+        itemResponse.setId(id);
+        itemResponse.setFullName(fullName);
+        itemResponse.setEmail(email);
+        itemResponse.setRoles(roles);
+        return itemResponse;
     }
 }

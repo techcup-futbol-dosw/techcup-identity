@@ -252,6 +252,22 @@ class RoleControllerIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    @DisplayName("Should return all roles when caller has read permission")
+    void shouldReturnAllRolesSuccessfully() throws Exception {
+        String token = jwtService.generateAccessToken(
+                999L,
+                List.of("ADMIN"),
+                List.of("role:read:any")
+        );
+
+        mockMvc.perform(get("/roles")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").exists())
+                .andExpect(jsonPath("$[*].name").isArray());
+    }
+
     // =========================================================
     // HELPERS
     // =========================================================
