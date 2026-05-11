@@ -44,7 +44,7 @@ public class AccountEntity {
     @Column(nullable = false)
     private Relation relation;
 
-    @Column(nullable = false)
+    @Column
     private Integer semester;
 
     @NotBlank

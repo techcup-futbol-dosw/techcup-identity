@@ -2,6 +2,7 @@ package edu.eci.dosw.repository;
 
 import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.model.AccountStatus;
+import edu.eci.dosw.model.IdentificationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -32,4 +33,9 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
                                        @Param("role") String role,
                                        @Param("status") AccountStatus status,
                                        Pageable pageable);
+
+    boolean existsByIdentificationTypeAndIdentificationIgnoreCase(
+            IdentificationType identificationType,
+            String identification
+    );
 }
