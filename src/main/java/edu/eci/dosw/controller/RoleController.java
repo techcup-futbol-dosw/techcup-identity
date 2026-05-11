@@ -113,4 +113,17 @@ public class RoleController {
     ) {
         return ResponseEntity.ok(roleService.getPermissions(roleId));
     }
+    @Operation(
+            summary = "Listar todos los roles",
+            description = "Obtiene la lista de roles disponibles en el sistema."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Roles obtenidos correctamente"),
+            @ApiResponse(responseCode = "403", description = "No tiene permisos para consultar roles")
+    })
+    @PreAuthorize("hasAuthority('role:read:any')")
+    @GetMapping
+    public ResponseEntity<List<RoleSummaryResponse>> getAllRoles() {
+        return ResponseEntity.ok(roleService.getAllRoles());
+    }
 }

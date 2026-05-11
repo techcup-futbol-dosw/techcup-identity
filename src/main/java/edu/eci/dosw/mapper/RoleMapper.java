@@ -1,5 +1,6 @@
 package edu.eci.dosw.mapper;
 
+import edu.eci.dosw.dto.RoleSummaryResponse;
 import edu.eci.dosw.entity.PermissionEntity;
 import edu.eci.dosw.entity.RoleEntity;
 import edu.eci.dosw.model.Permission;
@@ -49,5 +50,15 @@ public class RoleMapper {
         entity.setPermissions(permEntities);
 
         return entity;
+    }
+    public RoleSummaryResponse toSummaryResponse(Role model) {
+        if (model == null) {
+            return null;
+        }
+
+        return new RoleSummaryResponse(
+                model.getId(),
+                model.getName()
+        );
     }
 }

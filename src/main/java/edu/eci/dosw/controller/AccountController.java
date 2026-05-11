@@ -1,5 +1,6 @@
 package edu.eci.dosw.controller;
 
+import edu.eci.dosw.model.AccountStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -120,5 +121,34 @@ public class AccountController {
             @RequestParam String email
     ) {
         return ResponseEntity.ok(accountService.existsByEmail(email));
+    }
+    @Operation(
+            summary = "Listar y buscar cuentas para administración",
+            description = "Obtiene una lista paginada de cuentas, permitiendo filtrar por texto, rol y estado."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente"),
+            @ApiResponse(responseCode = "403", description = "No tiene permisos para consultar cuentas")
+    })
+    @PreAuthorize("hasAuthority('account:read:any')")
+    @GetMapping
+    public ResponseEntity<AccountAdminPageResponse> searchAccounts(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) AccountStatus status,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(defaultValue = "name,asc") String sort
+    ) {
+        AccountAdminSearchCriteria criteria = new AccountAdminSearchCriteria();
+        criteria.setQuery(query);
+        criteria.setRole(role);
+        criteria.setStatus(status);
+        criteria.setPage(page);
+        criteria.setSize(size);
+        criteria.setSort(sort);
+
+        AccountAdminPageResponse response = accountService.searchAccounts(criteria);
+        return ResponseEntity.ok(response);
     }
 }
