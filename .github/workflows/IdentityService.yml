@@ -38,6 +38,9 @@ jobs:
         run: mvn -B test
         env:
           SPRING_PROFILES_ACTIVE: test
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
 
       - name: Build package
         run: mvn -B -DskipTests package
