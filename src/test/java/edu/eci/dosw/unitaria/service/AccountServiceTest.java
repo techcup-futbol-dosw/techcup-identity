@@ -1,4 +1,5 @@
 package edu.eci.dosw.unitaria.service;
+import edu.eci.dosw.exception.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -21,15 +22,9 @@ import edu.eci.dosw.dto.AccountResponse;
 import edu.eci.dosw.dto.RegisterAccountRequest;
 import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.entity.RoleEntity;
-import edu.eci.dosw.exception.AccountNotFoundException;
-import edu.eci.dosw.exception.EmailAlreadyRegisteredException;
-import edu.eci.dosw.exception.InvalidEmailForRelationException;
-import edu.eci.dosw.exception.InvalidRegistrationDataException;
-import edu.eci.dosw.exception.RoleNotFoundException;
 import edu.eci.dosw.mapper.AccountMapper;
 import edu.eci.dosw.mapper.RoleMapper;
 import edu.eci.dosw.model.Account;
-import edu.eci.dosw.model.AccountStatus;
 import edu.eci.dosw.model.Relation;
 import edu.eci.dosw.model.Role;
 import edu.eci.dosw.repository.AccountRepository;
@@ -155,6 +150,27 @@ class AccountServiceTest {
         );
 
         assertEquals("Email already registered: " + EMAIL, ex.getMessage());
+
+        verify(accountRepository).findByEmail(EMAIL);
+        verifyNoInteractions(roleRepository, roleMapper, accountMapper, passwordEncoder);
+        verify(accountRepository, never()).save(any());
+    }
+
+    @Test
+    void register_ShouldThrowException_WhenStudentHasNoSemester() {
+        RegisterAccountRequest request = validRegisterRequest(EMAIL);
+        request.setRelation(Relation.ESTUDIANTE);
+        request.setSemester(null);
+
+        when(accountRepository.findByEmail(EMAIL))
+                .thenReturn(Optional.empty());
+
+        MissingRequiredFieldException ex = assertThrows(
+                MissingRequiredFieldException.class,
+                () -> accountService.register(request)
+        );
+
+        assertEquals("Semester is required for students", ex.getMessage());
 
         verify(accountRepository).findByEmail(EMAIL);
         verifyNoInteractions(roleRepository, roleMapper, accountMapper, passwordEncoder);

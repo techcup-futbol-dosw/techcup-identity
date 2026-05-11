@@ -1,11 +1,15 @@
 package edu.eci.dosw.unitaria.entity;
 
+import edu.eci.dosw.model.Gender;
+import edu.eci.dosw.model.IdentificationType;
+import edu.eci.dosw.model.Relation;
 import org.junit.jupiter.api.Test;
 
 import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.model.AccountStatus;
 import edu.eci.dosw.entity.RoleEntity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,73 +18,139 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AccountEntityTest {
 
-    @Test
-    void settersAndGetters_ShouldWorkCorrectly() {
-        AccountEntity account = new AccountEntity();
-        LocalDateTime now = LocalDateTime.now();
+    private static final Long ACCOUNT_ID = 1L;
+    private static final Long ROLE_ID = 10L;
 
-        account.setId(1L);
-        account.setEmail("juan@escuelaing.edu.co");
-        account.setPasswordHash("encoded-password");
-        account.setStatus(AccountStatus.ACTIVE);
-        account.setCreatedAt(now);
-        account.setUpdatedAt(now);
-        account.setLastLoginAt(now);
+    private static final String NAME = "Juan";
+    private static final String LAST_NAME = "Roa";
+    private static final String EMAIL = "juan@escuelaing.edu.co";
+    private static final String PASSWORD_HASH = "encoded-password";
+    private static final String PROGRAM = "INGENIERIA_SISTEMAS";
+    private static final String IDENTIFICATION = "123456789";
 
-        assertEquals(1L, account.getId());
-        assertEquals("juan@escuelaing.edu.co", account.getEmail());
-        assertEquals("encoded-password", account.getPasswordHash());
-        assertEquals(AccountStatus.ACTIVE, account.getStatus());
-        assertEquals(now, account.getCreatedAt());
-        assertEquals(now, account.getUpdatedAt());
-        assertEquals(now, account.getLastLoginAt());
-    }
+    private static final LocalDate BIRTH_DATE = LocalDate.of(2000, 5, 15);
 
     @Test
     void defaultConstructor_ShouldInitializeRolesAsEmptyList() {
-        AccountEntity account = new AccountEntity();
-        assertNotNull(account.getRoles());
-        assertTrue(account.getRoles().isEmpty());
+        AccountEntity entity = new AccountEntity();
+
+        assertNotNull(entity.getRoles());
+        assertTrue(entity.getRoles().isEmpty());
     }
 
     @Test
-    void setRoles_ShouldAssignRolesList() {
-        AccountEntity account = new AccountEntity();
-        RoleEntity role = new RoleEntity();
-        role.setName("PLAYER");
-        List<RoleEntity> roles = new ArrayList<>();
-        roles.add(role);
+    void settersAndGetters_ShouldWorkCorrectly() {
+        LocalDateTime createdAt = LocalDateTime.now();
+        LocalDateTime updatedAt = createdAt.plusMinutes(5);
+        LocalDateTime lastLoginAt = createdAt.plusHours(1);
 
-        account.setRoles(roles);
+        RoleEntity role = role(ROLE_ID, "PLAYER");
 
-        assertEquals(1, account.getRoles().size());
-        assertEquals("PLAYER", account.getRoles().get(0).getName());
+        AccountEntity entity = new AccountEntity();
+        entity.setId(ACCOUNT_ID);
+        entity.setName(NAME);
+        entity.setLastName(LAST_NAME);
+        entity.setBirthDate(BIRTH_DATE);
+        entity.setRelation(Relation.ESTUDIANTE);
+        entity.setSemester(7);
+        entity.setProgram(PROGRAM);
+        entity.setEmail(EMAIL);
+        entity.setPasswordHash(PASSWORD_HASH);
+        entity.setStatus(AccountStatus.ACTIVE);
+        entity.setGender(Gender.MALE);
+        entity.setIdentificationType(IdentificationType.CC);
+        entity.setIdentification(IDENTIFICATION);
+        entity.setCreatedAt(createdAt);
+        entity.setUpdatedAt(updatedAt);
+        entity.setLastLoginAt(lastLoginAt);
+        entity.setRoles(List.of(role));
+
+        assertEquals(ACCOUNT_ID, entity.getId());
+        assertEquals(NAME, entity.getName());
+        assertEquals(LAST_NAME, entity.getLastName());
+        assertEquals(BIRTH_DATE, entity.getBirthDate());
+        assertEquals(Relation.ESTUDIANTE, entity.getRelation());
+        assertEquals(7, entity.getSemester());
+        assertEquals(PROGRAM, entity.getProgram());
+
+        assertEquals(EMAIL, entity.getEmail());
+        assertEquals(PASSWORD_HASH, entity.getPasswordHash());
+        assertEquals(AccountStatus.ACTIVE, entity.getStatus());
+
+        assertEquals(Gender.MALE, entity.getGender());
+        assertEquals(IdentificationType.CC, entity.getIdentificationType());
+        assertEquals(IDENTIFICATION, entity.getIdentification());
+
+        assertEquals(createdAt, entity.getCreatedAt());
+        assertEquals(updatedAt, entity.getUpdatedAt());
+        assertEquals(lastLoginAt, entity.getLastLoginAt());
+
+        assertNotNull(entity.getRoles());
+        assertEquals(1, entity.getRoles().size());
+        assertEquals("PLAYER", entity.getRoles().get(0).getName());
+    }
+
+    @Test
+    void setRoles_ShouldAssignRoles_WhenListIsNotNull() {
+        AccountEntity entity = new AccountEntity();
+
+        RoleEntity playerRole = role(ROLE_ID, "PLAYER");
+        RoleEntity adminRole = role(20L, "ADMIN");
+
+        entity.setRoles(List.of(playerRole, adminRole));
+
+        assertNotNull(entity.getRoles());
+        assertEquals(2, entity.getRoles().size());
+        assertEquals("PLAYER", entity.getRoles().get(0).getName());
+        assertEquals("ADMIN", entity.getRoles().get(1).getName());
     }
 
     @Test
     void setRoles_ShouldAssignEmptyList_WhenNullIsPassed() {
-        AccountEntity account = new AccountEntity();
-        account.setRoles(null);
+        AccountEntity entity = new AccountEntity();
+        entity.setRoles(null);
 
-        assertNotNull(account.getRoles());
-        assertTrue(account.getRoles().isEmpty());
+        assertNotNull(entity.getRoles());
+        assertTrue(entity.getRoles().isEmpty());
     }
 
     @Test
-    void status_ShouldSupportBothValues() {
-        AccountEntity account = new AccountEntity();
+    void lastLoginAt_ShouldAllowNullValue() {
+        AccountEntity entity = new AccountEntity();
+        entity.setLastLoginAt(null);
 
-        account.setStatus(AccountStatus.ACTIVE);
-        assertEquals(AccountStatus.ACTIVE, account.getStatus());
-
-        account.setStatus(AccountStatus.INACTIVE);
-        assertEquals(AccountStatus.INACTIVE, account.getStatus());
+        assertNull(entity.getLastLoginAt());
     }
 
     @Test
-    void lastLoginAt_ShouldAllowNull() {
-        AccountEntity account = new AccountEntity();
-        account.setLastLoginAt(null);
-        assertNull(account.getLastLoginAt());
+    void shouldAllowChangingStatus() {
+        AccountEntity entity = new AccountEntity();
+
+        entity.setStatus(AccountStatus.ACTIVE);
+        assertEquals(AccountStatus.ACTIVE, entity.getStatus());
+
+        entity.setStatus(AccountStatus.INACTIVE);
+        assertEquals(AccountStatus.INACTIVE, entity.getStatus());
+    }
+
+    @Test
+    void shouldAllowChangingEnums() {
+        AccountEntity entity = new AccountEntity();
+
+        entity.setRelation(Relation.ESTUDIANTE);
+        entity.setGender(Gender.MALE);
+        entity.setIdentificationType(IdentificationType.CC);
+
+        assertEquals(Relation.ESTUDIANTE, entity.getRelation());
+        assertEquals(Gender.MALE, entity.getGender());
+        assertEquals(IdentificationType.CC, entity.getIdentificationType());
+    }
+
+    private RoleEntity role(Long id, String name) {
+        RoleEntity role = new RoleEntity();
+        role.setId(id);
+        role.setName(name);
+        role.setPermissions(new ArrayList<>());
+        return role;
     }
 }
