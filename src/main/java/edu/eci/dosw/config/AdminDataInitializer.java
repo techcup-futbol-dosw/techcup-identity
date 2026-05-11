@@ -31,7 +31,7 @@ public class AdminDataInitializer {
     private static final Logger log = LoggerFactory.getLogger(AdminDataInitializer.class);
 
     @Bean
-    CommandLineRunner initAdminAccount(
+    public CommandLineRunner initAdminAccount(
             AccountRepository accountRepository,
             RoleRepository roleRepository,
             PermissionRepository permissionRepository,
