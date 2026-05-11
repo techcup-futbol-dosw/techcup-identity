@@ -1,8 +1,10 @@
 package edu.eci.dosw.service;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
+import edu.eci.dosw.dto.RoleSummaryResponse;
 import edu.eci.dosw.exception.AccountNotFoundException;
 import edu.eci.dosw.exception.RoleNotFoundException;
 import org.slf4j.Logger;
@@ -100,6 +102,15 @@ public class RoleService {
     public boolean hasPermission(Long roleId, String permissionName) {
         return getPermissions(roleId).stream()
                 .anyMatch(permission -> permission.getName().equalsIgnoreCase(permissionName));
+    }
+
+    @Transactional
+    public List<RoleSummaryResponse> getAllRoles() {
+        return roleRepository.findAll().stream()
+                .map(roleMapper::toModel)
+                .sorted(Comparator.comparing(Role::getName, String.CASE_INSENSITIVE_ORDER))
+                .map(roleMapper::toSummaryResponse)
+                .toList();
     }
 
     private Account findAccountByIdOrThrow(Long accountId) {

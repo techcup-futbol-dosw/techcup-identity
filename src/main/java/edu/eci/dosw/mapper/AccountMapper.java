@@ -1,5 +1,6 @@
 package edu.eci.dosw.mapper;
 
+import edu.eci.dosw.dto.AccountAdminItemResponse;
 import edu.eci.dosw.dto.AccountResponse;
 import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.entity.RoleEntity;
@@ -117,5 +118,32 @@ public class AccountMapper {
                 model.getSemester(),
                 model.getStatus()
         );
+    }
+    public AccountAdminItemResponse toAdminItemResponse(Account model) {
+        AccountAdminItemResponse response = new AccountAdminItemResponse();
+
+        response.setId(model.getId());
+        response.setName(model.getName());
+        response.setLastName(model.getLastName());
+        response.setFullName(model.getName() + " " + model.getLastName());
+        response.setEmail(model.getEmail());
+
+        response.setIdentificationType(model.getIdentificationType());
+        response.setIdentification(model.getIdentification());
+
+        response.setStatus(model.getStatus());
+
+        response.setProgram(model.getProgram());
+        response.setSemester(model.getSemester());
+
+        List<String> roleNames = model.getRoles() == null
+                ? List.of()
+                : model.getRoles().stream()
+                .map(Role::getName)
+                .toList();
+
+        response.setRoles(roleNames);
+
+        return response;
     }
 }
