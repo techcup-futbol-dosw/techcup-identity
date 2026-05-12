@@ -1,6 +1,7 @@
 package edu.eci.dosw.unitary.exception;
 
 import edu.eci.dosw.exception.*;
+import edu.eci.dosw.model.IdentificationType;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -226,5 +227,26 @@ class GlobalExceptionHandlerTest {
                 CONFLICT_ERROR,
                 "Email already registered: Email exists"
         );
+    }
+
+    @Test
+    void handleUnprocessableEntityExceptions_ShouldReturnUnprocessableEntity() {
+        IdentificationAlreadyRegisteredException exception =
+                new IdentificationAlreadyRegisteredException(
+                        IdentificationType.CC,
+                        "123456789"
+                );
+
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleUnprocessableEntityExceptions(exception, request);
+
+        assertEquals(422, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals("Unprocessable Entity", response.getBody().getError());
+        assertEquals(
+                "Identification already registered: CC 123456789",
+                response.getBody().getMessage()
+        );
+        assertEquals("/test", response.getBody().getPath());
     }
 }

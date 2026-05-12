@@ -1,6 +1,7 @@
 package edu.eci.dosw.controller;
 
 import edu.eci.dosw.model.AccountStatus;
+import edu.eci.dosw.model.IdentificationType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -150,5 +151,33 @@ public class AccountController {
 
         AccountAdminPageResponse response = accountService.searchAccounts(criteria);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Verificar si una identificación ya está registrada",
+            description = "Indica si ya existe una cuenta registrada con el tipo y número de identificación proporcionados. "
+                    + "Este endpoint se utiliza principalmente durante el registro para evitar duplicados."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Validación realizada correctamente"),
+            @ApiResponse(responseCode = "400", description = "Tipo de identificación o número de identificación inválido")
+    })
+    @GetMapping("/identification/exists")
+    public ResponseEntity<Boolean> existsByIdentification(
+            @Parameter(
+                    description = "Tipo de identificación a verificar. Ejemplo: CC, TI o PASSPORT",
+                    required = true
+            )
+            @RequestParam IdentificationType identificationType,
+
+            @Parameter(
+                    description = "Número o código de identificación a verificar",
+                    required = true
+            )
+            @RequestParam String identification
+    ) {
+        return ResponseEntity.ok(
+                accountService.existsByIdentification(identificationType, identification)
+        );
     }
 }

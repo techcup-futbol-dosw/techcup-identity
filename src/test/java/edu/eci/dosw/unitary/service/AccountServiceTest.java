@@ -1,7 +1,7 @@
 package edu.eci.dosw.unitary.service;
 import edu.eci.dosw.dto.*;
 import edu.eci.dosw.exception.*;
-import edu.eci.dosw.model.AccountStatus;
+import edu.eci.dosw.model.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -25,9 +25,6 @@ import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.entity.RoleEntity;
 import edu.eci.dosw.mapper.AccountMapper;
 import edu.eci.dosw.mapper.RoleMapper;
-import edu.eci.dosw.model.Account;
-import edu.eci.dosw.model.Relation;
-import edu.eci.dosw.model.Role;
 import edu.eci.dosw.repository.AccountRepository;
 import edu.eci.dosw.repository.RoleRepository;
 import edu.eci.dosw.service.AccountService;
@@ -171,7 +168,7 @@ class AccountServiceTest {
                 () -> accountService.register(request)
         );
 
-        assertEquals("Semester is required for students", ex.getMessage());
+        assertEquals("Semester is required", ex.getMessage());
 
         verify(accountRepository).findByEmail(EMAIL);
         verifyNoInteractions(roleRepository, roleMapper, accountMapper, passwordEncoder);
@@ -498,6 +495,73 @@ class AccountServiceTest {
         );
         verify(accountMapper, never()).toModel(any());
         verify(accountMapper, never()).toAdminItemResponse(any());
+    }
+
+    @Test
+    void register_ShouldThrowException_WhenIdentificationAlreadyExists() {
+        RegisterAccountRequest request =
+                validRegisterRequest("juan@mail.escuelaing.edu.co");
+
+        request.setIdentificationType(IdentificationType.CC);
+        request.setIdentification("123456789");
+
+        when(accountRepository.findByEmail(request.getEmail()))
+                .thenReturn(Optional.empty());
+
+        when(accountRepository.existsByIdentificationTypeAndIdentificationIgnoreCase(
+                IdentificationType.CC,
+                "123456789"
+        )).thenReturn(true);
+
+        IdentificationAlreadyRegisteredException ex = assertThrows(
+                IdentificationAlreadyRegisteredException.class,
+                () -> accountService.register(request)
+        );
+
+        assertEquals(
+                "Identification already registered: CC 123456789",
+                ex.getMessage()
+        );
+
+        verify(accountRepository).findByEmail(request.getEmail());
+        verify(accountRepository).existsByIdentificationTypeAndIdentificationIgnoreCase(
+                IdentificationType.CC,
+                "123456789"
+        );
+        verifyNoInteractions(roleRepository, roleMapper, accountMapper, passwordEncoder);
+        verify(accountRepository, never()).save(any());
+    }
+
+    @Test
+    void existsByIdentification_ShouldReturnTrue_WhenIdentificationExists() {
+        when(accountRepository.existsByIdentificationTypeAndIdentificationIgnoreCase(
+                IdentificationType.CC,
+                "123456789"
+        )).thenReturn(true);
+
+        boolean result = accountService.existsByIdentification(
+                IdentificationType.CC,
+                "123456789"
+        );
+
+        assertTrue(result);
+
+        verify(accountRepository).existsByIdentificationTypeAndIdentificationIgnoreCase(
+                IdentificationType.CC,
+                "123456789"
+        );
+    }
+
+    @Test
+    void existsByIdentification_ShouldReturnFalse_WhenIdentificationDataIsInvalid() {
+        boolean result = accountService.existsByIdentification(
+                IdentificationType.CC,
+                "   "
+        );
+
+        assertFalse(result);
+
+        verifyNoInteractions(accountRepository);
     }
     private Account captureBuiltAccount() {
         ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);

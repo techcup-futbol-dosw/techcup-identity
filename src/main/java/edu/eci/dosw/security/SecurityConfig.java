@@ -54,7 +54,8 @@ public class SecurityConfig {
                                 "/auth/logout",
                                 "/auth/validate",
                                 "/accounts/register",
-                                "/accounts/exists"
+                                "/accounts/exists",
+                                "/accounts/identification/exists"
                         ).permitAll()
                         .anyRequest().authenticated()
                 ).

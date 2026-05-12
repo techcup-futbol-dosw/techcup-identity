@@ -3,6 +3,7 @@ package edu.eci.dosw.unitary.controller;
 import edu.eci.dosw.controller.AccountController;
 import edu.eci.dosw.dto.AccountResponse;
 import edu.eci.dosw.dto.RegisterAccountRequest;
+import edu.eci.dosw.model.IdentificationType;
 import edu.eci.dosw.service.AccountService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -113,5 +114,19 @@ class AccountControllerTest {
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertFalse(result.getBody());
         verify(accountService).existsByEmail("noexiste@escuelaing.edu.co");
+    }
+
+    @Test
+    void existsByIdentification_ShouldReturnOk() {
+        when(accountService.existsByIdentification(IdentificationType.CC, "123456789"))
+                .thenReturn(true);
+
+        ResponseEntity<Boolean> result =
+                accountController.existsByIdentification(IdentificationType.CC, "123456789");
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(Boolean.TRUE, result.getBody());
+
+        verify(accountService).existsByIdentification(IdentificationType.CC, "123456789");
     }
 }

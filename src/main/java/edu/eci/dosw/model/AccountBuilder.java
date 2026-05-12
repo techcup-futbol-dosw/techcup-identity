@@ -154,7 +154,9 @@ public class AccountBuilder {
         requireNotBlank(lastName, "Last name is required");
         requireNotNull(birthDate, "Birth date is required");
         requireNotNull(relation, "Relation is required");
-        requireNotNull(semester, "Semester is required");
+        if (relation != null && relation.equals(Relation.ESTUDIANTE)) {
+            requireNotNull(semester, "Semester is required");
+        }
         requireNotBlank(program, "Program is required");
         requireNotBlank(email, "Email is required");
         requireNotBlank(passwordHash, "Password hash is required");
