@@ -17,19 +17,33 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
 
     Optional<AccountEntity> findByEmail(String email);
 
-    @Query("""
-    SELECT DISTINCT a
-    FROM AccountEntity a
-    LEFT JOIN a.roles r
-    WHERE (:query IS NULL OR
-           LOWER(a.name) LIKE LOWER(CONCAT('%', :query, '%')) OR
-           LOWER(a.lastName) LIKE LOWER(CONCAT('%', :query, '%')) OR
-           LOWER(a.email) LIKE LOWER(CONCAT('%', :query, '%')) OR
-           LOWER(a.identification) LIKE LOWER(CONCAT('%', :query, '%')))
-      AND (:role IS NULL OR LOWER(r.name) = LOWER(:role))
-      AND (:status IS NULL OR a.status = :status)
-""")
-    Page<AccountEntity> searchForAdmin(@Param("query") String query,
+    @Query(
+            value = """
+                SELECT DISTINCT a
+                FROM AccountEntity a
+                LEFT JOIN a.roles r
+                WHERE (:queryPattern IS NULL OR
+                       LOWER(a.name) LIKE :queryPattern OR
+                       LOWER(a.lastName) LIKE :queryPattern OR
+                       LOWER(a.email) LIKE :queryPattern OR
+                       LOWER(a.identification) LIKE :queryPattern)
+                  AND (:role IS NULL OR LOWER(r.name) = :role)
+                  AND (:status IS NULL OR a.status = :status)
+                """,
+            countQuery = """
+                SELECT COUNT(DISTINCT a)
+                FROM AccountEntity a
+                LEFT JOIN a.roles r
+                WHERE (:queryPattern IS NULL OR
+                       LOWER(a.name) LIKE :queryPattern OR
+                       LOWER(a.lastName) LIKE :queryPattern OR
+                       LOWER(a.email) LIKE :queryPattern OR
+                       LOWER(a.identification) LIKE :queryPattern)
+                  AND (:role IS NULL OR LOWER(r.name) = :role)
+                  AND (:status IS NULL OR a.status = :status)
+                """
+    )
+    Page<AccountEntity> searchForAdmin(@Param("queryPattern") String queryPattern,
                                        @Param("role") String role,
                                        @Param("status") AccountStatus status,
                                        Pageable pageable);
