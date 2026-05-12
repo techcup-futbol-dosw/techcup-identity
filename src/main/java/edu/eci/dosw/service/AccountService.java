@@ -55,6 +55,14 @@ public class AccountService {
             throw new EmailAlreadyRegisteredException(request.getEmail());
         }
 
+        if (existsByIdentification(request.getIdentificationType(), request.getIdentification())) {
+            throw new IdentificationAlreadyRegisteredException(
+                    request.getIdentificationType(),
+                    request.getIdentification()
+            );
+        }
+
+        validateSemesterByRelation(request);
         validateRegistrationRules(request);
 
         Role playerRole = findRoleByNameOrThrow("PLAYER");
@@ -142,6 +150,18 @@ public class AccountService {
                 accountPage.getSize(),
                 accountPage.getTotalElements(),
                 accountPage.getTotalPages()
+        );
+    }
+
+    public boolean existsByIdentification(IdentificationType identificationType,
+                                          String identification) {
+        if (identificationType == null || identification == null || identification.isBlank()) {
+            return false;
+        }
+
+        return accountRepository.existsByIdentificationTypeAndIdentificationIgnoreCase(
+                identificationType,
+                identification.trim()
         );
     }
 
@@ -247,5 +267,10 @@ public class AccountService {
             case "createdAt" -> "createdAt";
             default -> "name";
         };
+    }
+    private void validateSemesterByRelation(RegisterAccountRequest request) {
+        if (request.getRelation() == Relation.ESTUDIANTE && request.getSemester() == null) {
+            throw new MissingRequiredFieldException("Semester");
+        }
     }
 }

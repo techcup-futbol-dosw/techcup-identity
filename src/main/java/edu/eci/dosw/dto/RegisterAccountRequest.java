@@ -24,7 +24,6 @@ public class RegisterAccountRequest {
     @NotNull(message = "Program is required")
     private Program program;
 
-    @NotNull(message = "Semester is required")
     @Min(value = 1, message = "Semester must be at least 1")
     @Max(value = 10, message = "Semester must be at most 10")
     private Integer semester;
