@@ -341,7 +341,7 @@ class AccountServiceTest {
 
 
         when(accountRepository.searchForAdmin(
-                eq("juan"),
+                eq("%juan%"),
                 eq("player"),
                 eq(AccountStatus.ACTIVE),
                 any(Pageable.class)
@@ -366,7 +366,7 @@ class AccountServiceTest {
         assertEquals(List.of("PLAYER"), row.getRoles());
 
         verify(accountRepository).searchForAdmin(
-                eq("juan"),
+                eq("%juan%"),
                 eq("player"),
                 eq(AccountStatus.ACTIVE),
                 any(Pageable.class)
@@ -431,7 +431,7 @@ class AccountServiceTest {
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
 
         when(accountRepository.searchForAdmin(
-                eq("juan"),
+                eq("%juan%"),
                 eq("admin"),
                 eq(AccountStatus.ACTIVE),
                 any(Pageable.class)
@@ -447,7 +447,7 @@ class AccountServiceTest {
         assertEquals(0, result.getTotalPages());
 
         verify(accountRepository).searchForAdmin(
-                eq("juan"),
+                eq("%juan%"),
                 eq("admin"),
                 eq(AccountStatus.ACTIVE),
                 pageableCaptor.capture()
@@ -471,7 +471,7 @@ class AccountServiceTest {
         );
 
         when(accountRepository.searchForAdmin(
-                eq("nadie"),
+                eq("%nadie%"),
                 isNull(),
                 isNull(),
                 any(Pageable.class)
@@ -488,7 +488,7 @@ class AccountServiceTest {
         assertEquals(0, result.getTotalPages());
 
         verify(accountRepository).searchForAdmin(
-                eq("nadie"),
+                eq("%nadie%"),
                 isNull(),
                 isNull(),
                 any(Pageable.class)
