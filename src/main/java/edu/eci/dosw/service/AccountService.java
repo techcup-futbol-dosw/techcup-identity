@@ -129,11 +129,13 @@ public class AccountService {
         Pageable pageable = PageRequest.of(page, size, resolveSort(criteria.getSort()));
 
         String query = normalize(criteria.getQuery());
+        String queryPattern = query == null ? null : "%" + query + "%";
+
         String role = normalize(criteria.getRole());
         AccountStatus status = criteria.getStatus();
 
         Page<AccountEntity> accountPage = accountRepository.searchForAdmin(
-                query,
+                queryPattern,
                 role,
                 status,
                 pageable
