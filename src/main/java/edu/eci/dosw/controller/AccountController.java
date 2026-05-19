@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -92,20 +93,26 @@ public class AccountController {
 
     @Operation(
             summary = "Desactivar una cuenta",
-            description = "Marca una cuenta como inactiva. Solo puede ser ejecutado por usuarios con permiso de desactivación global."
+            description = "Desactiva una cuenta siempre que el usuario no pertenezca a un equipo inscrito en un torneo activo. "
+                    + "También sincroniza la desactivación con el servicio de usuarios."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Cuenta desactivada correctamente"),
             @ApiResponse(responseCode = "403", description = "No tiene permisos para desactivar cuentas"),
-            @ApiResponse(responseCode = "404", description = "Cuenta no encontrada")
+            @ApiResponse(responseCode = "404", description = "Cuenta no encontrada"),
+            @ApiResponse(responseCode = "409", description = "La cuenta no puede desactivarse porque pertenece a un equipo inscrito en un torneo activo"),
+            @ApiResponse(responseCode = "503", description = "No fue posible validar o sincronizar la información con otros servicios")
     })
     @PreAuthorize("hasAuthority('account:deactivate:any')")
     @PatchMapping("/{accountId}/deactivate")
     public ResponseEntity<Void> deactivate(
             @Parameter(description = "Identificador único de la cuenta a desactivar", required = true)
-            @PathVariable Long accountId
+            @PathVariable Long accountId,
+
+            @Parameter(hidden = true)
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader
     ) {
-        accountService.deactivate(accountId);
+        accountService.deactivate(accountId, authorizationHeader);
         return ResponseEntity.noContent().build();
     }
 

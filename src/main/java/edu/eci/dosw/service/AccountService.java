@@ -1,5 +1,8 @@
 package edu.eci.dosw.service;
 
+import edu.eci.dosw.client.TeamClient;
+import edu.eci.dosw.client.TournamentClient;
+import edu.eci.dosw.client.UserClient;
 import edu.eci.dosw.dto.*;
 import edu.eci.dosw.model.Relation;
 import edu.eci.dosw.entity.*;
@@ -21,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import static org.apache.tomcat.util.http.RequestUtil.normalize;
 
@@ -35,17 +39,26 @@ public class AccountService {
     private final RoleMapper roleMapper;
     private final AccountMapper accountMapper;
     private final PasswordEncoder passwordEncoder;
+    private final TeamClient teamClient;
+    private final TournamentClient tournamentClient;
+    private final UserClient userClient;
 
     public AccountService(AccountRepository accountRepository,
                           RoleRepository roleRepository,
                           RoleMapper roleMapper,
                           AccountMapper accountMapper,
-                          PasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder,
+                          TeamClient teamClient,
+                          TournamentClient tournamentClient,
+                          UserClient userClient) {
         this.accountRepository = accountRepository;
         this.roleRepository = roleRepository;
         this.roleMapper = roleMapper;
         this.accountMapper = accountMapper;
         this.passwordEncoder = passwordEncoder;
+        this.teamClient = teamClient;
+        this.tournamentClient = tournamentClient;
+        this.userClient = userClient;
     }
 
     @Transactional
@@ -103,6 +116,24 @@ public class AccountService {
         accountRepository.save(accountMapper.toEntity(account));
 
         log.info("Account deactivated successfully accountId={}", accountId);
+    }
+    @Transactional
+    public void deactivate(Long accountId, String authorizationHeader) {
+        AccountEntity accountEntity = accountRepository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
+
+        if (accountEntity.getStatus() == AccountStatus.INACTIVE) {
+            return;
+        }
+
+        validateAccountCanBeDeactivated(accountId, authorizationHeader);
+
+        accountEntity.setStatus(AccountStatus.INACTIVE);
+        accountEntity.setUpdatedAt(LocalDateTime.now());
+
+        accountRepository.save(accountEntity);
+
+        userClient.deactivateUser(accountId, authorizationHeader);
     }
 
     @Transactional(readOnly = true)
@@ -273,6 +304,25 @@ public class AccountService {
     private void validateSemesterByRelation(RegisterAccountRequest request) {
         if (request.getRelation() == Relation.ESTUDIANTE && request.getSemester() == null) {
             throw new MissingRequiredFieldException("Semester");
+        }
+    }
+    private void validateAccountCanBeDeactivated(Long accountId, String authorizationHeader) {
+        Optional<Long> teamId = teamClient.findTeamIdByPlayerId(
+                accountId,
+                authorizationHeader
+        );
+
+        if (teamId.isEmpty()) {
+            return;
+        }
+
+        boolean teamInActiveTournament = tournamentClient.isTeamInActiveTournament(
+                teamId.get(),
+                authorizationHeader
+        );
+
+        if (teamInActiveTournament) {
+            throw new AccountCannotBeDeactivatedException(accountId, teamId.get());
         }
     }
 }
