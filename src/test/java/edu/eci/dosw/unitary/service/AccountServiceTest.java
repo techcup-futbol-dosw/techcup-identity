@@ -1,4 +1,7 @@
 package edu.eci.dosw.unitary.service;
+import edu.eci.dosw.client.TeamClient;
+import edu.eci.dosw.client.TournamentClient;
+import edu.eci.dosw.client.UserClient;
 import edu.eci.dosw.dto.*;
 import edu.eci.dosw.exception.*;
 import edu.eci.dosw.model.*;
@@ -11,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,6 +48,10 @@ class AccountServiceTest {
 
     private static final String PLAYER_ROLE = "PLAYER";
 
+    private static final Long TEAM_ID = 10L;
+    private static final String AUTHORIZATION_HEADER = "Bearer admin-token";
+
+
     @Mock
     private AccountRepository accountRepository;
 
@@ -58,6 +66,16 @@ class AccountServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private TeamClient teamClient;
+
+    @Mock
+    private TournamentClient tournamentClient;
+
+    @Mock
+    private UserClient userClient;
+
 
     @InjectMocks
     private AccountService accountService;
@@ -563,11 +581,152 @@ class AccountServiceTest {
 
         verifyNoInteractions(accountRepository);
     }
+
+    @Test
+    void deactivate_ShouldDeactivateAccount_WhenUserHasNoTeam() {
+        AccountEntity accountEntity = activeAccountEntity();
+
+        when(accountRepository.findById(ACCOUNT_ID))
+                .thenReturn(Optional.of(accountEntity));
+
+        when(teamClient.findTeamIdByPlayerId(ACCOUNT_ID, AUTHORIZATION_HEADER))
+                .thenReturn(Optional.empty());
+
+        accountService.deactivate(ACCOUNT_ID, AUTHORIZATION_HEADER);
+
+        assertEquals(AccountStatus.INACTIVE, accountEntity.getStatus());
+        assertNotNull(accountEntity.getUpdatedAt());
+
+        verify(accountRepository).findById(ACCOUNT_ID);
+        verify(teamClient).findTeamIdByPlayerId(ACCOUNT_ID, AUTHORIZATION_HEADER);
+        verifyNoInteractions(tournamentClient);
+
+        verify(accountRepository).save(accountEntity);
+        verify(userClient).deactivateUser(ACCOUNT_ID, AUTHORIZATION_HEADER);
+    }
     private Account captureBuiltAccount() {
         ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
         verify(accountMapper).toEntity(accountCaptor.capture());
         return accountCaptor.getValue();
     }
+
+    @Test
+    void deactivate_ShouldDeactivateAccount_WhenUserHasTeamButTeamIsNotInActiveTournament() {
+        AccountEntity accountEntity = activeAccountEntity();
+
+        when(accountRepository.findById(ACCOUNT_ID))
+                .thenReturn(Optional.of(accountEntity));
+
+        when(teamClient.findTeamIdByPlayerId(ACCOUNT_ID, AUTHORIZATION_HEADER))
+                .thenReturn(Optional.of(TEAM_ID));
+
+        when(tournamentClient.isTeamInActiveTournament(TEAM_ID, AUTHORIZATION_HEADER))
+                .thenReturn(false);
+
+        accountService.deactivate(ACCOUNT_ID, AUTHORIZATION_HEADER);
+
+        assertEquals(AccountStatus.INACTIVE, accountEntity.getStatus());
+        assertNotNull(accountEntity.getUpdatedAt());
+
+        verify(accountRepository).findById(ACCOUNT_ID);
+        verify(teamClient).findTeamIdByPlayerId(ACCOUNT_ID, AUTHORIZATION_HEADER);
+        verify(tournamentClient).isTeamInActiveTournament(TEAM_ID, AUTHORIZATION_HEADER);
+
+        verify(accountRepository).save(accountEntity);
+        verify(userClient).deactivateUser(ACCOUNT_ID, AUTHORIZATION_HEADER);
+    }
+
+    @Test
+    void deactivate_ShouldThrowException_WhenUserTeamIsInActiveTournament() {
+        AccountEntity accountEntity = activeAccountEntity();
+
+        when(accountRepository.findById(ACCOUNT_ID))
+                .thenReturn(Optional.of(accountEntity));
+
+        when(teamClient.findTeamIdByPlayerId(ACCOUNT_ID, AUTHORIZATION_HEADER))
+                .thenReturn(Optional.of(TEAM_ID));
+
+        when(tournamentClient.isTeamInActiveTournament(TEAM_ID, AUTHORIZATION_HEADER))
+                .thenReturn(true);
+
+        AccountCannotBeDeactivatedException ex = assertThrows(
+                AccountCannotBeDeactivatedException.class,
+                () -> accountService.deactivate(ACCOUNT_ID, AUTHORIZATION_HEADER)
+        );
+
+        assertTrue(ex.getMessage().contains("Account cannot be deactivated"));
+        assertEquals(AccountStatus.ACTIVE, accountEntity.getStatus());
+
+        verify(accountRepository).findById(ACCOUNT_ID);
+        verify(teamClient).findTeamIdByPlayerId(ACCOUNT_ID, AUTHORIZATION_HEADER);
+        verify(tournamentClient).isTeamInActiveTournament(TEAM_ID, AUTHORIZATION_HEADER);
+
+        verify(accountRepository, never()).save(any());
+        verifyNoInteractions(userClient);
+    }
+
+    @Test
+    void deactivate_ShouldDoNothing_WhenAccountIsAlreadyInactive() {
+        AccountEntity accountEntity = inactiveAccountEntity();
+
+        when(accountRepository.findById(ACCOUNT_ID))
+                .thenReturn(Optional.of(accountEntity));
+
+        accountService.deactivate(ACCOUNT_ID, AUTHORIZATION_HEADER);
+
+        assertEquals(AccountStatus.INACTIVE, accountEntity.getStatus());
+
+        verify(accountRepository).findById(ACCOUNT_ID);
+        verify(accountRepository, never()).save(any());
+
+        verifyNoInteractions(teamClient, tournamentClient, userClient);
+    }
+    @Test
+    void deactivate_ShouldThrowException_WhenAccountDoesNotExist() {
+        when(accountRepository.findById(ACCOUNT_ID))
+                .thenReturn(Optional.empty());
+
+        AccountNotFoundException ex = assertThrows(
+                AccountNotFoundException.class,
+                () -> accountService.deactivate(ACCOUNT_ID, AUTHORIZATION_HEADER)
+        );
+
+        assertEquals("Account not found with id: 1", ex.getMessage());
+
+        verify(accountRepository).findById(ACCOUNT_ID);
+        verify(accountRepository, never()).save(any());
+
+        verifyNoInteractions(teamClient, tournamentClient, userClient);
+    }
+
+    @Test
+    void deactivate_ShouldThrowExternalServiceException_WhenUserServiceFails() {
+        AccountEntity accountEntity = activeAccountEntity();
+
+        when(accountRepository.findById(ACCOUNT_ID))
+                .thenReturn(Optional.of(accountEntity));
+
+        when(teamClient.findTeamIdByPlayerId(ACCOUNT_ID, AUTHORIZATION_HEADER))
+                .thenReturn(Optional.empty());
+
+        doThrow(new ExternalServiceException("Could not deactivate user data for account: 1"))
+                .when(userClient)
+                .deactivateUser(ACCOUNT_ID, AUTHORIZATION_HEADER);
+
+        ExternalServiceException ex = assertThrows(
+                ExternalServiceException.class,
+                () -> accountService.deactivate(ACCOUNT_ID, AUTHORIZATION_HEADER)
+        );
+
+        assertEquals(
+                "Could not deactivate user data for account: 1",
+                ex.getMessage()
+        );
+
+        verify(accountRepository).save(accountEntity);
+        verify(userClient).deactivateUser(ACCOUNT_ID, AUTHORIZATION_HEADER);
+    }
+
 
     private Account createAccountModel(String email, String passwordHash, Role role) {
         return validAccountBuilder(email)
@@ -620,4 +779,21 @@ class AccountServiceTest {
         itemResponse.setRoles(roles);
         return itemResponse;
     }
+
+    private AccountEntity activeAccountEntity() {
+        AccountEntity entity = new AccountEntity();
+        entity.setId(ACCOUNT_ID);
+        entity.setStatus(AccountStatus.ACTIVE);
+        entity.setUpdatedAt(LocalDateTime.now().minusDays(1));
+        return entity;
+    }
+
+    private AccountEntity inactiveAccountEntity() {
+        AccountEntity entity = new AccountEntity();
+        entity.setId(ACCOUNT_ID);
+        entity.setStatus(AccountStatus.INACTIVE);
+        entity.setUpdatedAt(LocalDateTime.now().minusDays(1));
+        return entity;
+    }
+
 }
