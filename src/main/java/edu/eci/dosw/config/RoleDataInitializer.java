@@ -95,7 +95,9 @@ public class RoleDataInitializer {
             "result:register:any",
             "result:read:any",
             "goal:register:any",
+            "goal:update:any",
             "card:register:any",
+            "card:update:any",
             "standings:read:any",
             "bracket:read:any",
             "stats:read:any",
@@ -104,7 +106,12 @@ public class RoleDataInitializer {
     );
 
     private static final Set<String> REFEREE_PERMISSIONS = Set.of(
-            "referee-match:read:assigned"
+            "referee-match:read:assigned",
+            "result:read:assigned",
+            "goal:register:assigned",
+            "goal:update:assigned",
+            "card:register:assigned",
+            "card:update:assigned"
     );
 
     @Bean
