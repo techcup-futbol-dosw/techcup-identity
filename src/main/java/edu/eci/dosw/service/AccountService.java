@@ -147,7 +147,7 @@ public class AccountService {
 
         return accountMapper.toModel(accountEntity);
     }
-    @Transactional
+    @Transactional(readOnly = true)
     public AccountAdminPageResponse searchAccounts(AccountAdminSearchCriteria criteria) {
         int page = criteria.getPage() != null && criteria.getPage() >= 0
                 ? criteria.getPage()
@@ -160,14 +160,16 @@ public class AccountService {
         Pageable pageable = PageRequest.of(page, size, resolveSort(criteria.getSort()));
 
         String query = normalize(criteria.getQuery());
-        String queryPattern = query == null ? null : "%" + query + "%";
+        String queryPattern = query == null ? "" : "%" + query + "%";
 
         String role = normalize(criteria.getRole());
+        String roleFilter = role == null ? "" : role;
+
         AccountStatus status = criteria.getStatus();
 
         Page<AccountEntity> accountPage = accountRepository.searchForAdmin(
                 queryPattern,
-                role,
+                roleFilter,
                 status,
                 pageable
         );
