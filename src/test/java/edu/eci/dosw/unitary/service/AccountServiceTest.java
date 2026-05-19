@@ -407,8 +407,8 @@ class AccountServiceTest {
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
 
         when(accountRepository.searchForAdmin(
-                isNull(),
-                isNull(),
+                eq(""),
+                eq(""),
                 isNull(),
                 any(Pageable.class)
         )).thenReturn(emptyPage);
@@ -423,8 +423,8 @@ class AccountServiceTest {
         assertEquals(0, result.getTotalPages());
 
         verify(accountRepository).searchForAdmin(
-                isNull(),
-                isNull(),
+                eq(""),
+                eq(""),
                 isNull(),
                 pageableCaptor.capture()
         );
@@ -490,7 +490,7 @@ class AccountServiceTest {
 
         when(accountRepository.searchForAdmin(
                 eq("%nadie%"),
-                isNull(),
+                eq(""),
                 isNull(),
                 any(Pageable.class)
         )).thenReturn(emptyPage);
@@ -507,7 +507,7 @@ class AccountServiceTest {
 
         verify(accountRepository).searchForAdmin(
                 eq("%nadie%"),
-                isNull(),
+                eq(""),
                 isNull(),
                 any(Pageable.class)
         );
