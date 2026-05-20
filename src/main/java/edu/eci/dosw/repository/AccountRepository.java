@@ -22,24 +22,24 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
                 SELECT DISTINCT a
                 FROM AccountEntity a
                 LEFT JOIN a.roles r
-                WHERE (:queryPattern IS NULL OR
+                WHERE (:queryPattern = '' OR
                        LOWER(a.name) LIKE :queryPattern OR
                        LOWER(a.lastName) LIKE :queryPattern OR
                        LOWER(a.email) LIKE :queryPattern OR
                        LOWER(a.identification) LIKE :queryPattern)
-                  AND (:role IS NULL OR LOWER(r.name) = :role)
+                  AND (:role = '' OR LOWER(r.name) = :role)
                   AND (:status IS NULL OR a.status = :status)
                 """,
             countQuery = """
                 SELECT COUNT(DISTINCT a)
                 FROM AccountEntity a
                 LEFT JOIN a.roles r
-                WHERE (:queryPattern IS NULL OR
+                WHERE (:queryPattern = '' OR
                        LOWER(a.name) LIKE :queryPattern OR
                        LOWER(a.lastName) LIKE :queryPattern OR
                        LOWER(a.email) LIKE :queryPattern OR
                        LOWER(a.identification) LIKE :queryPattern)
-                  AND (:role IS NULL OR LOWER(r.name) = :role)
+                  AND (:role = '' OR LOWER(r.name) = :role)
                   AND (:status IS NULL OR a.status = :status)
                 """
     )

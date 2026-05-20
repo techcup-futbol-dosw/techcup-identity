@@ -139,6 +139,14 @@ public class PermissionDataInitializer {
             "result:read:any",
             "goal:register:any",
             "card:register:any",
+            "goal:update:any",
+            "card:update:any",
+            "result:read:assigned",
+            "goal:register:assigned",
+            "goal:update:assigned",
+            "card:register:assigned",
+            "card:update:assigned",
+
 
             // 19) Referee queries
             "referee-match:read:assigned"
