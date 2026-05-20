@@ -24,6 +24,9 @@ class GlobalExceptionHandlerTest {
     private static final int NOT_FOUND = 404;
     private static final int CONFLICT = 409;
     private static final int INTERNAL_SERVER_ERROR = 500;
+    private static final Long ACCOUNT_ID = 1L;
+    private static final Long TEAM_ID = 10L;
+
 
     private static final String BAD_REQUEST_ERROR = "Bad Request";
     private static final String UNAUTHORIZED_ERROR = "Unauthorized";
@@ -248,5 +251,36 @@ class GlobalExceptionHandlerTest {
                 response.getBody().getMessage()
         );
         assertEquals("/test", response.getBody().getPath());
+    }
+
+    @Test
+    void handleAccountCannotBeDeactivated_ShouldReturnConflict() {
+        AccountCannotBeDeactivatedException exception =
+                new AccountCannotBeDeactivatedException(ACCOUNT_ID, TEAM_ID);
+
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleAccountCannotBeDeactivated(exception, request);
+
+        assertErrorResponse(
+                response,
+                409,
+                "Conflict",
+                "Account cannot be deactivated because account 1 belongs to team 10 enrolled in an active tournament"
+        );
+    }
+    @Test
+    void handleExternalServiceException_ShouldReturnServiceUnavailable() {
+        ExternalServiceException exception =
+                new ExternalServiceException("Could not verify team membership for account: 1");
+
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleExternalServiceException(exception, request);
+
+        assertErrorResponse(
+                response,
+                503,
+                "Service Unavailable",
+                "Could not verify team membership for account: 1"
+        );
     }
 }

@@ -20,6 +20,22 @@
     <maven.compiler.release>17</maven.compiler.release>
     <mapstruct.version>1.6.0</mapstruct.version>
     <jacoco.version>0.8.12</jacoco.version>
+    <sonar.coverage.jacoco.xmlReportPaths>
+      ${project.build.directory}/site/jacoco/jacoco.xml
+    </sonar.coverage.jacoco.xmlReportPaths>
+    <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+    <sonar.exclusions>
+      **/entity/**,
+      **/*Application.java,
+      **/config/**,
+      **/*MapperImpl.java
+    </sonar.exclusions>
+    <sonar.coverage.exclusions>
+      **/entity/**,
+      **/*Application.java,
+      **/config/**,
+      **/*MapperImpl.java
+    </sonar.coverage.exclusions>
   </properties>
 
   <dependencyManagement>
@@ -97,6 +113,11 @@
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
       <version>2.6.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.mapstruct</groupId>
@@ -190,6 +211,10 @@
               <goal>report</goal>
             </goals>
             <configuration>
+              <formats>
+                <format>HTML</format>
+                <format>XML</format>
+              </formats>
               <excludes>
                 <exclude>edu/eci/dosw/*Application.class</exclude>
                 <exclude>edu/eci/dosw/entity/**</exclude>

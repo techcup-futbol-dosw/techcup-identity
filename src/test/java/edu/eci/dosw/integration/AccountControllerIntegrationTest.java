@@ -1,6 +1,9 @@
 package edu.eci.dosw.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.eci.dosw.client.TeamClient;
+import edu.eci.dosw.client.TournamentClient;
+import edu.eci.dosw.client.UserClient;
 import edu.eci.dosw.dto.RegisterAccountRequest;
 import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.entity.RoleEntity;
@@ -20,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -28,10 +32,12 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static edu.eci.dosw.testutil.TestDataFactory.validAccountBuilder;
 import static edu.eci.dosw.testutil.TestDataFactory.validRegisterRequest;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -88,6 +94,15 @@ class AccountControllerIntegrationTest {
 
     private RoleEntity playerRoleEntity;
     private RoleEntity adminRoleEntity;
+
+    @MockBean
+    private TeamClient teamClient;
+
+    @MockBean
+    private TournamentClient tournamentClient;
+
+    @MockBean
+    private UserClient userClient;
 
     @BeforeEach
     void setUp() {
@@ -268,13 +283,24 @@ class AccountControllerIntegrationTest {
         );
 
         String token = adminToken(ACCOUNT_DEACTIVATE_ANY);
+        String authorizationHeader = bearer(token);
 
-        mockMvc.perform(patch(DEACTIVATE_PATH, accountEntity.getId()).header("Authorization", bearer(token)))
+        when(teamClient.findTeamIdByPlayerId(accountEntity.getId(), authorizationHeader))
+                .thenReturn(Optional.empty());
+
+        mockMvc.perform(patch(DEACTIVATE_PATH, accountEntity.getId())
+                        .header("Authorization", authorizationHeader))
                 .andExpect(status().isNoContent());
 
         AccountEntity updated = accountRepository.findById(accountEntity.getId()).orElseThrow();
+
         assertThat(updated.getStatus()).isEqualTo(AccountStatus.INACTIVE);
+
+        verify(teamClient).findTeamIdByPlayerId(accountEntity.getId(), authorizationHeader);
+        verifyNoInteractions(tournamentClient);
+        verify(userClient).deactivateUser(accountEntity.getId(), authorizationHeader);
     }
+
 
     @Test
     @DisplayName("Should return 403 when caller tries to deactivate without permission")

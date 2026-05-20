@@ -3,6 +3,7 @@ package edu.eci.dosw.unitary.controller;
 import edu.eci.dosw.controller.AccountController;
 import edu.eci.dosw.dto.AccountResponse;
 import edu.eci.dosw.dto.RegisterAccountRequest;
+import edu.eci.dosw.exception.AccountNotFoundException;
 import edu.eci.dosw.model.IdentificationType;
 import edu.eci.dosw.service.AccountService;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AccountControllerTest {
+    private static final Long ACCOUNT_ID = 1L;
+
 
     @Mock
     private AccountService accountService;
@@ -75,23 +78,38 @@ class AccountControllerTest {
     }
 
     @Test
-    void deactivate_ShouldReturnNoContent_WhenAccountExists() {
-        doNothing().when(accountService).deactivate(1L);
+    void deactivate_ShouldReturnNoContent_WhenAccountIsDeactivated() {
+        String authorizationHeader = "Bearer admin-token";
 
-        ResponseEntity<Void> result = accountController.deactivate(1L);
+        doNothing()
+                .when(accountService)
+                .deactivate(ACCOUNT_ID, authorizationHeader);
+
+        ResponseEntity<Void> result =
+                accountController.deactivate(ACCOUNT_ID, authorizationHeader);
 
         assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
         assertNull(result.getBody());
-        verify(accountService).deactivate(1L);
+
+        verify(accountService).deactivate(ACCOUNT_ID, authorizationHeader);
     }
 
     @Test
     void deactivate_ShouldThrowException_WhenAccountDoesNotExist() {
-        doThrow(new RuntimeException("Account not found")).when(accountService).deactivate(999L);
+        String authorizationHeader = "Bearer admin-token";
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> accountController.deactivate(999L));
-        assertEquals("Account not found", ex.getMessage());
-        verify(accountService).deactivate(999L);
+        doThrow(new AccountNotFoundException(ACCOUNT_ID))
+                .when(accountService)
+                .deactivate(ACCOUNT_ID, authorizationHeader);
+
+        AccountNotFoundException ex = assertThrows(
+                AccountNotFoundException.class,
+                () -> accountController.deactivate(ACCOUNT_ID, authorizationHeader)
+        );
+
+        assertEquals("Account not found with id: 1", ex.getMessage());
+
+        verify(accountService).deactivate(ACCOUNT_ID, authorizationHeader);
     }
 
     @Test
