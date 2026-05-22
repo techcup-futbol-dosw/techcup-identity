@@ -144,7 +144,7 @@ class NewIntegrationTest {
                 "Perez",
                 "Juan",
                 passwordEncoder.encode("Password123*"),
-                "Systems",
+                Program.SISTEMAS,
                 Relation.ESTUDIANTE,
                 List.of(roleModel),
                 8,

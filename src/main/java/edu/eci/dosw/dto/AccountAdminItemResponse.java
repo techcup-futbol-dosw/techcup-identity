@@ -1,6 +1,7 @@
 package edu.eci.dosw.dto;
 
 import edu.eci.dosw.model.AccountStatus;
+import edu.eci.dosw.model.Program;
 import edu.eci.dosw.model.IdentificationType;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class AccountAdminItemResponse {
 
     private AccountStatus status;
 
-    private String program;
+    private Program program;
     private Integer semester;
 
     private List<String> roles;
@@ -34,7 +35,7 @@ public class AccountAdminItemResponse {
                                     IdentificationType identificationType,
                                     String identification,
                                     AccountStatus status,
-                                    String program,
+                                    Program program,
                                     Integer semester,
                                     List<String> roles) {
         this.id = id;
@@ -114,11 +115,11 @@ public class AccountAdminItemResponse {
         this.status = status;
     }
 
-    public String getProgram() {
+    public Program getProgram() {
         return program;
     }
 
-    public void setProgram(String program) {
+    public void setProgram(Program program) {
         this.program = program;
     }
 

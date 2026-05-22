@@ -2,11 +2,13 @@ package edu.eci.dosw.entity;
 
 import edu.eci.dosw.model.Relation;
 import edu.eci.dosw.model.AccountStatus;
+import edu.eci.dosw.model.Program;
 import edu.eci.dosw.model.Gender;
 import edu.eci.dosw.model.IdentificationType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -47,9 +49,10 @@ public class AccountEntity {
     @Column
     private Integer semester;
 
-    @NotBlank
+    @NotNull
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String program;
+    private Program program;
 
     @NotBlank
     @Column(nullable = false, unique = true)
@@ -115,11 +118,11 @@ public class AccountEntity {
         this.name = name;
     }
 
-    public String getProgram() {
+    public Program getProgram() {
         return program;
     }
 
-    public void setProgram(String program) {
+    public void setProgram(Program program) {
         this.program = program;
     }
 

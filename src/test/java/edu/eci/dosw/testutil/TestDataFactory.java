@@ -44,7 +44,7 @@ public final class TestDataFactory {
                 .birthDate(LocalDate.of(2000, 5, 15))
                 .relation(Relation.ESTUDIANTE)
                 .semester(7)
-                .program("SISTEMAS")
+                .program(Program.SISTEMAS)
                 .email(email)
                 .passwordHash("encoded-password")
                 .status(AccountStatus.ACTIVE)
@@ -100,7 +100,7 @@ public final class TestDataFactory {
         entity.setBirthDate(LocalDate.of(2000, 5, 15));
         entity.setRelation(Relation.ESTUDIANTE);
         entity.setSemester(7);
-        entity.setProgram("SISTEMAS");
+        entity.setProgram(Program.SISTEMAS);
         entity.setEmail(email);
         entity.setPasswordHash("encoded-password");
         entity.setStatus(AccountStatus.ACTIVE);

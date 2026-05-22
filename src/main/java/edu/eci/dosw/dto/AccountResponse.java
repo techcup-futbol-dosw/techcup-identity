@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import edu.eci.dosw.model.AccountStatus;
+import edu.eci.dosw.model.Program;
 import edu.eci.dosw.model.Gender;
 import edu.eci.dosw.model.IdentificationType;
 import edu.eci.dosw.model.Relation;
@@ -21,14 +22,14 @@ public class AccountResponse {
     private LocalDate birthDate;
     private Relation relation;
     private Integer semester;
-    private String program;
+    private Program program;
     private Gender gender;
     private IdentificationType identificationType;
     private String identification;
 
     public AccountResponse() {}
 
-    public AccountResponse(LocalDateTime createdAt, LocalDate birthDate, String email, Gender gender, Long id, String identification, IdentificationType identificationType, String lastName, String name, String program, Relation relation, List<String> roles, Integer semester, AccountStatus status) {
+    public AccountResponse(LocalDateTime createdAt, LocalDate birthDate, String email, Gender gender, Long id, String identification, IdentificationType identificationType, String lastName, String name, Program program, Relation relation, List<String> roles, Integer semester, AccountStatus status) {
         this.createdAt = createdAt;
         this.birthDate = birthDate;
         this.email = email;
@@ -100,11 +101,11 @@ public class AccountResponse {
         this.identificationType = identificationType;
     }
 
-    public String getProgram() {
+    public Program getProgram() {
         return program;
     }
 
-    public void setProgram(String program) {
+    public void setProgram(Program program) {
         this.program = program;
     }
 

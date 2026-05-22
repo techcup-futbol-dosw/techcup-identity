@@ -137,7 +137,7 @@ class AccountServiceTest {
         assertEquals(request.getBirthDate(), builtAccount.getBirthDate());
         assertEquals(request.getRelation(), builtAccount.getRelation());
         assertEquals(request.getSemester(), builtAccount.getSemester());
-        assertEquals(request.getProgram().name(), builtAccount.getProgram());
+        assertEquals(request.getProgram(), builtAccount.getProgram());
 
         assertEquals(request.getEmail(), builtAccount.getEmail());
         assertEquals(ENCODED_PASSWORD, builtAccount.getPasswordHash());

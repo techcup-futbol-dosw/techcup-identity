@@ -1,16 +1,10 @@
 package edu.eci.dosw.service;
 
-import edu.eci.dosw.client.TeamClient;
-import edu.eci.dosw.client.TournamentClient;
-import edu.eci.dosw.client.UserClient;
-import edu.eci.dosw.dto.*;
-import edu.eci.dosw.model.Relation;
-import edu.eci.dosw.entity.*;
-import edu.eci.dosw.model.AccountStatus;
-import edu.eci.dosw.exception.*;
-import edu.eci.dosw.mapper.*;
-import edu.eci.dosw.model.*;
-import edu.eci.dosw.repository.*;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -21,12 +15,34 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-
-import static org.apache.tomcat.util.http.RequestUtil.normalize;
+import edu.eci.dosw.client.TeamClient;
+import edu.eci.dosw.client.TournamentClient;
+import edu.eci.dosw.client.UserClient;
+import edu.eci.dosw.dto.AccountAdminItemResponse;
+import edu.eci.dosw.dto.AccountAdminPageResponse;
+import edu.eci.dosw.dto.AccountAdminSearchCriteria;
+import edu.eci.dosw.dto.AccountResponse;
+import edu.eci.dosw.dto.RegisterAccountRequest;
+import edu.eci.dosw.entity.AccountEntity;
+import edu.eci.dosw.entity.RoleEntity;
+import edu.eci.dosw.exception.AccountCannotBeDeactivatedException;
+import edu.eci.dosw.exception.AccountNotFoundException;
+import edu.eci.dosw.exception.EmailAlreadyRegisteredException;
+import edu.eci.dosw.exception.IdentificationAlreadyRegisteredException;
+import edu.eci.dosw.exception.InvalidEmailForRelationException;
+import edu.eci.dosw.exception.InvalidRegistrationDataException;
+import edu.eci.dosw.exception.MissingRequiredFieldException;
+import edu.eci.dosw.exception.RoleNotFoundException;
+import edu.eci.dosw.mapper.AccountMapper;
+import edu.eci.dosw.mapper.RoleMapper;
+import edu.eci.dosw.model.Account;
+import edu.eci.dosw.model.AccountBuilder;
+import edu.eci.dosw.model.AccountStatus;
+import edu.eci.dosw.model.IdentificationType;
+import edu.eci.dosw.model.Relation;
+import edu.eci.dosw.model.Role;
+import edu.eci.dosw.repository.AccountRepository;
+import edu.eci.dosw.repository.RoleRepository;
 
 
 @Service
@@ -107,10 +123,6 @@ public class AccountService {
             log.warn("Deactivation skipped: account already inactive accountId={}", accountId);
             return;
         }
-
-        // TODO:
-        // Validate with the corresponding team/tournament domain
-        // whether this account can be deactivated.
 
         account.setStatus(AccountStatus.INACTIVE);
         accountRepository.save(accountMapper.toEntity(account));
@@ -254,7 +266,7 @@ public class AccountService {
                 .birthDate(request.getBirthDate())
                 .relation(request.getRelation())
                 .semester(request.getSemester())
-                .program(request.getProgram().name())
+                .program(request.getProgram())
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .gender(request.getGender())

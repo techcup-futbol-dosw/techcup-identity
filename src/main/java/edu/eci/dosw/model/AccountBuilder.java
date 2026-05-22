@@ -1,11 +1,11 @@
 package edu.eci.dosw.model;
 
-import edu.eci.dosw.exception.InvalidAccountBuildException;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import edu.eci.dosw.exception.InvalidAccountBuildException;
 
 public class AccountBuilder {
 
@@ -16,7 +16,7 @@ public class AccountBuilder {
     private LocalDate birthDate;
     private Relation relation;
     private Integer semester;
-    private String program;
+    private Program program;
 
     private String email;
     private String passwordHash;
@@ -62,7 +62,7 @@ public class AccountBuilder {
         return this;
     }
 
-    public AccountBuilder program(String program) {
+    public AccountBuilder program(Program program) {
         this.program = program;
         return this;
     }
@@ -157,7 +157,7 @@ public class AccountBuilder {
         if (relation != null && relation.equals(Relation.ESTUDIANTE)) {
             requireNotNull(semester, "Semester is required");
         }
-        requireNotBlank(program, "Program is required");
+        requireNotNull(program, "Program is required");
         requireNotBlank(email, "Email is required");
         requireNotBlank(passwordHash, "Password hash is required");
         requireNotNull(createdAt, "CreatedAt is required");

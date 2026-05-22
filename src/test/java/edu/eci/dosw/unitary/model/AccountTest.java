@@ -1,13 +1,23 @@
 package edu.eci.dosw.unitary.model;
-import edu.eci.dosw.model.*;
-import org.junit.jupiter.api.Test;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+
+import edu.eci.dosw.model.Account;
+import edu.eci.dosw.model.AccountStatus;
+import edu.eci.dosw.model.Gender;
+import edu.eci.dosw.model.IdentificationType;
+import edu.eci.dosw.model.Program;
+import edu.eci.dosw.model.Relation;
+import edu.eci.dosw.model.Role;
 
 class AccountTest {
 
@@ -31,9 +41,6 @@ class AccountTest {
 
     private static final String LAST_NAME = "Roa";
     private static final String UPDATED_LAST_NAME = "Hernandez";
-
-    private static final String PROGRAM = "INGENIERIA_SISTEMAS";
-    private static final String UPDATED_PROGRAM = "INGENIERIA_INDUSTRIAL";
 
     private static final String IDENTIFICATION = "123456789";
     private static final String UPDATED_IDENTIFICATION = "987654321";
@@ -68,7 +75,7 @@ class AccountTest {
                 LAST_NAME,
                 NAME,
                 PASSWORD_HASH,
-                PROGRAM,
+                Program.SISTEMAS,
                 Relation.ESTUDIANTE,
                 roles,
                 SEMESTER,
@@ -96,7 +103,7 @@ class AccountTest {
         assertEquals(BIRTH_DATE, account.getBirthDate());
         assertEquals(Relation.ESTUDIANTE, account.getRelation());
         assertEquals(SEMESTER, account.getSemester());
-        assertEquals(PROGRAM, account.getProgram());
+        assertEquals(Program.SISTEMAS, account.getProgram());
 
         assertEquals(EMAIL, account.getEmail());
         assertEquals(PASSWORD_HASH, account.getPasswordHash());
@@ -151,7 +158,7 @@ class AccountTest {
         account.setBirthDate(UPDATED_BIRTH_DATE);
         account.setRelation(Relation.ESTUDIANTE);
         account.setSemester(UPDATED_SEMESTER);
-        account.setProgram(UPDATED_PROGRAM);
+        account.setProgram(Program.INDUSTRIAL);
 
         account.setEmail(UPDATED_EMAIL);
         account.setPasswordHash(UPDATED_PASSWORD_HASH);
@@ -171,7 +178,7 @@ class AccountTest {
         assertEquals(UPDATED_BIRTH_DATE, account.getBirthDate());
         assertEquals(Relation.ESTUDIANTE, account.getRelation());
         assertEquals(UPDATED_SEMESTER, account.getSemester());
-        assertEquals(UPDATED_PROGRAM, account.getProgram());
+        assertEquals(Program.INDUSTRIAL, account.getProgram());
 
         assertEquals(UPDATED_EMAIL, account.getEmail());
         assertEquals(UPDATED_PASSWORD_HASH, account.getPasswordHash());

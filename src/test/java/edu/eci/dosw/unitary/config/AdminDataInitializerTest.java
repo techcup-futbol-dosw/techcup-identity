@@ -39,7 +39,7 @@ class AdminDataInitializerTest {
     private static final String ADMIN_BIRTH_DATE = "2000-01-01";
     private static final Relation ADMIN_RELATION = Relation.ESTUDIANTE;
     private static final Integer ADMIN_SEMESTER = 1;
-    private static final String ADMIN_PROGRAM = "SISTEMAS";
+    private static final Program ADMIN_PROGRAM = Program.SISTEMAS;
     private static final Gender ADMIN_GENDER = Gender.MALE;
     private static final IdentificationType ADMIN_IDENTIFICATION_TYPE = IdentificationType.CC;
     private static final String ADMIN_IDENTIFICATION = "ADMIN-0001";

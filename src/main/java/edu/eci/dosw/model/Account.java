@@ -13,7 +13,7 @@ public class Account {
     private LocalDate birthDate;
     private Relation relation;
     private Integer semester;
-    private String program;
+    private Program program;
     private String email;
     private String passwordHash;
     private AccountStatus status;
@@ -25,7 +25,7 @@ public class Account {
     private String identification;
     private List<Role> roles;
 
-    public Account(LocalDate birthDate, LocalDateTime createdAt, String email, Gender gender, Long id, String identification, IdentificationType identificationType, LocalDateTime lastLoginAt, String lastName, String name, String passwordHash, String program, Relation relation, List<Role> roles, Integer semester, AccountStatus status, LocalDateTime updatedAt) {
+    public Account(LocalDate birthDate, LocalDateTime createdAt, String email, Gender gender, Long id, String identification, IdentificationType identificationType, LocalDateTime lastLoginAt, String lastName, String name, String passwordHash, Program program, Relation relation, List<Role> roles, Integer semester, AccountStatus status, LocalDateTime updatedAt) {
         this.birthDate = birthDate;
         this.createdAt = createdAt;
         this.email = email;
@@ -107,11 +107,11 @@ public class Account {
         this.semester = semester;
     }
 
-    public String getProgram() {
+    public Program getProgram() {
         return program;
     }
 
-    public void setProgram(String program) {
+    public void setProgram(Program program) {
         this.program = program;
     }
 

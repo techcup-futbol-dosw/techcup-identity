@@ -5,12 +5,7 @@ import edu.eci.dosw.entity.RoleEntity;
 import edu.eci.dosw.exception.InvalidAccountBuildException;
 import edu.eci.dosw.mapper.AccountMapper;
 import edu.eci.dosw.mapper.RoleMapper;
-import edu.eci.dosw.model.Account;
-import edu.eci.dosw.model.AccountStatus;
-import edu.eci.dosw.model.Gender;
-import edu.eci.dosw.model.IdentificationType;
-import edu.eci.dosw.model.Relation;
-import edu.eci.dosw.model.Role;
+import edu.eci.dosw.model.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -38,7 +33,7 @@ class AccountMapperTest {
 
     private static final String NAME = "Juan";
     private static final String LAST_NAME = "Roa";
-    private static final String PROGRAM = "SISTEMAS";
+    private static final Program PROGRAM = Program.SISTEMAS;
     private static final String IDENTIFICATION = "123456789";
 
     private static final LocalDate BIRTH_DATE = LocalDate.of(2000, 5, 15);

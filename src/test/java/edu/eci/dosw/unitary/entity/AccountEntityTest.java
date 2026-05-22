@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import edu.eci.dosw.entity.AccountEntity;
 import edu.eci.dosw.model.AccountStatus;
+import edu.eci.dosw.model.Program;
 import edu.eci.dosw.entity.RoleEntity;
 
 import java.time.LocalDate;
@@ -25,7 +26,7 @@ class AccountEntityTest {
     private static final String LAST_NAME = "Roa";
     private static final String EMAIL = "juan@escuelaing.edu.co";
     private static final String PASSWORD_HASH = "encoded-password";
-    private static final String PROGRAM = "INGENIERIA_SISTEMAS";
+    private static final Program PROGRAM = Program.SISTEMAS;
     private static final String IDENTIFICATION = "123456789";
 
     private static final LocalDate BIRTH_DATE = LocalDate.of(2000, 5, 15);

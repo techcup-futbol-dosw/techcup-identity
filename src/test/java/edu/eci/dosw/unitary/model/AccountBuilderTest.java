@@ -1,21 +1,25 @@
 package edu.eci.dosw.unitary.model;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.function.Consumer;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.Test;
+
 import edu.eci.dosw.exception.InvalidAccountBuildException;
 import edu.eci.dosw.model.Account;
 import edu.eci.dosw.model.AccountBuilder;
 import edu.eci.dosw.model.AccountStatus;
 import edu.eci.dosw.model.Gender;
 import edu.eci.dosw.model.IdentificationType;
+import edu.eci.dosw.model.Program;
 import edu.eci.dosw.model.Relation;
 import edu.eci.dosw.model.Role;
-import org.junit.jupiter.api.Test;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.function.Consumer;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class AccountBuilderTest {
 
@@ -27,7 +31,7 @@ class AccountBuilderTest {
                 .birthDate(LocalDate.of(2000, 5, 15))
                 .relation(Relation.ESTUDIANTE)
                 .semester(7)
-                .program("INGENIERIA_SISTEMAS")
+                .program(Program.SISTEMAS)
                 .email("juan@escuelaing.edu.co")
                 .passwordHash("encoded-password")
                 .createdAt(LocalDateTime.now())
@@ -62,7 +66,7 @@ class AccountBuilderTest {
         assertEquals(LocalDate.of(2000, 5, 15), account.getBirthDate());
         assertEquals(Relation.ESTUDIANTE, account.getRelation());
         assertEquals(7, account.getSemester());
-        assertEquals("INGENIERIA_SISTEMAS", account.getProgram());
+        assertEquals(Program.SISTEMAS, account.getProgram());
 
         assertEquals("juan@escuelaing.edu.co", account.getEmail());
         assertEquals("encoded-password", account.getPasswordHash());
@@ -191,7 +195,7 @@ class AccountBuilderTest {
 
     @Test
     void build_ShouldThrowException_WhenProgramIsBlank() {
-        assertBuildFailure(builder -> builder.program("   "), "Program is required");
+        assertBuildFailure(builder -> builder.program(null), "Program is required");
     }
 
     @Test

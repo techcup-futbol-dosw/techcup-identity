@@ -3,6 +3,7 @@ package edu.eci.dosw.unitary.dto;
 import edu.eci.dosw.dto.AccountResponse;
 import edu.eci.dosw.model.Relation;
 import edu.eci.dosw.model.AccountStatus;
+import edu.eci.dosw.model.Program;
 import edu.eci.dosw.model.Gender;
 import edu.eci.dosw.model.IdentificationType;
 import org.junit.jupiter.api.Test;
@@ -53,7 +54,7 @@ class AccountResponseTest {
                 IdentificationType.CC,
                 "Roa",
                 "Juan",
-                "INGENIERIA_SISTEMAS",
+                Program.SISTEMAS,
                 Relation.ESTUDIANTE,
                 roles,
                 7,
@@ -71,7 +72,7 @@ class AccountResponseTest {
         assertEquals(birthDate, response.getBirthDate());
         assertEquals(Relation.ESTUDIANTE, response.getRelation());
         assertEquals(7, response.getSemester());
-        assertEquals("INGENIERIA_SISTEMAS", response.getProgram());
+        assertEquals(Program.SISTEMAS, response.getProgram());
         assertEquals(Gender.MALE, response.getGender());
         assertEquals(IdentificationType.CC, response.getIdentificationType());
         assertEquals("123456789", response.getIdentification());
@@ -96,7 +97,7 @@ class AccountResponseTest {
         assertEquals(birthDate, response.getBirthDate());
         assertEquals(Relation.ESTUDIANTE, response.getRelation());
         assertEquals(8, response.getSemester());
-        assertEquals("INGENIERIA_SISTEMAS", response.getProgram());
+        assertEquals(Program.SISTEMAS, response.getProgram());
         assertEquals(Gender.MALE, response.getGender());
         assertEquals(IdentificationType.CC, response.getIdentificationType());
         assertEquals("987654321", response.getIdentification());
@@ -116,7 +117,7 @@ class AccountResponseTest {
         response.setBirthDate(birthDate);
         response.setRelation(Relation.ESTUDIANTE);
         response.setSemester(8);
-        response.setProgram("INGENIERIA_SISTEMAS");
+        response.setProgram(Program.SISTEMAS);
         response.setGender(Gender.MALE);
         response.setIdentificationType(IdentificationType.CC);
         response.setIdentification("987654321");

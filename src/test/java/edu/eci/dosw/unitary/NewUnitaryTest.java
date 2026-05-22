@@ -153,14 +153,14 @@ class NewUnitaryTest {
                         IdentificationType.CC,
                         "123",
                         AccountStatus.ACTIVE,
-                        "Systems",
+                        Program.SISTEMAS,
                         8,
                         List.of("ADMIN")
                 );
 
         assertEquals("Juan", response.getName());
         assertEquals("Perez", response.getLastName());
-        assertEquals("Systems", response.getProgram());
+        assertEquals(Program.SISTEMAS, response.getProgram());
     }
 
     @Test
@@ -169,11 +169,11 @@ class NewUnitaryTest {
         AccountAdminItemResponse response =
                 new AccountAdminItemResponse();
 
-        response.setProgram("Engineering");
+        response.setProgram(Program.AMBIENTAL);
         response.setSemester(9);
 
         assertEquals(
-                "Engineering",
+                Program.AMBIENTAL,
                 response.getProgram()
         );
 
@@ -197,7 +197,7 @@ class NewUnitaryTest {
                 "Perez",
                 "Juan",
                 "password",
-                "Systems",
+                Program.SISTEMAS,
                 Relation.ESTUDIANTE,
                 null,
                 8,
