@@ -111,7 +111,8 @@ public class RoleDataInitializer {
             "goal:register:assigned",
             "goal:update:assigned",
             "card:register:assigned",
-            "card:update:assigned"
+            "card:update:assigned",
+            "match:update:any"
     );
 
     @Bean
